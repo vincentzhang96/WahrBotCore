@@ -1,8 +1,8 @@
 package com.divinitor.discord.wahrbot.core.util.gson.adapters;
 
+import com.divinitor.discord.wahrbot.core.util.gson.StandardGson;
 import com.github.zafarkhaja.semver.Version;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.junit.*;
 
 public class VersionTypeAdapterTest {
@@ -11,9 +11,7 @@ public class VersionTypeAdapterTest {
         TestClass testClass = new TestClass();
         testClass.version = Version.forIntegers(0, 1, 4);
 
-        Gson gson = new GsonBuilder()
-            .registerTypeAdapter(Version.class, new VersionTypeAdapter())
-            .create();
+        Gson gson = StandardGson.pretty();
 
         String res = gson.toJson(testClass);
 
@@ -24,9 +22,7 @@ public class VersionTypeAdapterTest {
     public void read() throws Exception {
         String test = "{\"version\": \"0.1.4\"}";
 
-        Gson gson = new GsonBuilder()
-            .registerTypeAdapter(Version.class, new VersionTypeAdapter())
-            .create();
+        Gson gson = StandardGson.pretty();
 
         TestClass testClass = gson.fromJson(test, TestClass.class);
 
