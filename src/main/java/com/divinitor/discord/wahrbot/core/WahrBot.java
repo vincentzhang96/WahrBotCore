@@ -1,26 +1,31 @@
 package com.divinitor.discord.wahrbot.core;
 
 import com.divinitor.discord.wahrbot.core.config.BotConfig;
+import com.divinitor.discord.wahrbot.core.util.WahrBotModule;
 import com.divinitor.discord.wahrbot.core.util.gson.StandardGson;
 import com.google.gson.Gson;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import lombok.Getter;
+import net.dv8tion.jda.core.JDA;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.nio.file.StandardOpenOption.CREATE;
 
 public class WahrBot {
 
     public static void main(String[] args) {
-
+        WahrBot bot = new WahrBot();
+        bot.run();
     }
+
+    @Getter
+    private Injector injector;
 
     @Getter
     private BotConfig config;
@@ -28,10 +33,14 @@ public class WahrBot {
     @Getter
     private final Path botDir;
 
+    @Getter
+    private JDA apiClient;
+
     public WahrBot() {
         botDir = Paths.get(
                 System.getProperty("com.divinitor.discord.wahrbot.home", ""))
                 .toAbsolutePath();
+        Runtime.getRuntime().addShutdownHook(new Thread(this::onShutdown));
     }
 
     public void run() {
@@ -51,6 +60,7 @@ public class WahrBot {
         }
 
         //  Set up DI
+        injector = Guice.createInjector(new WahrBotModule(this));
 
         //  Init PostgrSQL connection
 
@@ -71,6 +81,10 @@ public class WahrBot {
 
     private void startBot() {
         //  Connect to Discord and begin general execution
+
+    }
+
+    private void onShutdown() {
 
     }
 }
