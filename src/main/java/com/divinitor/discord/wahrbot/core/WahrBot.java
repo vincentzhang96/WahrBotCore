@@ -24,6 +24,8 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -145,7 +147,45 @@ public class WahrBot {
     }
 
     private void onShutdown() {
+        LOGGER.info("Shutting down {}", getApplicationName());
+        Map<String, Exception> shutdownExceptions = new HashMap<>();
 
+        //  Shut down modules
+
+        //  Shut down services
+
+        //  Shut down API client
+        try {
+            if (apiClient != null) {
+                apiClient.shutdownNow();
+            }
+        } catch (Exception e) {
+            shutdownExceptions.put("discordapi", e);
+        }
+
+        //  Shut down SQL connection
+        try {
+            if (sqlConnection != null) {
+                sqlConnection.close();
+            }
+        } catch (Exception e) {
+            shutdownExceptions.put("sql", e);
+        }
+
+        //  Shut down redis connection
+        try {
+            jedisPool.close();
+        } catch (Exception e) {
+            shutdownExceptions.put("redis", e);
+        }
+
+        if (shutdownExceptions.isEmpty()) {
+            LOGGER.info("Shutdown successful");
+        } else {
+            LOGGER.warn("One or more exceptions during shutdown. Shutdown of {} may not be clean!",
+                    getApplicationName());
+            shutdownExceptions.forEach(LOGGER::warn);
+        }
     }
 
     public String getApplicationName() {
