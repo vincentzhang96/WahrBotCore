@@ -9,5 +9,6 @@ public class BotConfig {
 
     private DiscordCredentials discord;
     private RedisCredentials redis;
-    private SQLCredentials postgres;
+    private SQLCredentials sqlCredentials;
+    private String instanceName;
 }

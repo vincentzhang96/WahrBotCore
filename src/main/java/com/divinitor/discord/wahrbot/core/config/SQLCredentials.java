@@ -12,4 +12,6 @@ public class SQLCredentials {
     private String username;
     private String password;
     private String database;
+    private String jdbcProviderName;
+    private String urlScheme;
 }

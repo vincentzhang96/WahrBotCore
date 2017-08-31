@@ -4,6 +4,9 @@ import com.divinitor.discord.wahrbot.core.WahrBot;
 import com.divinitor.discord.wahrbot.core.config.BotConfig;
 import com.google.inject.AbstractModule;
 import net.dv8tion.jda.core.JDA;
+import redis.clients.jedis.Jedis;
+
+import java.sql.Connection;
 
 public class WahrBotModule extends AbstractModule {
 
@@ -18,5 +21,7 @@ public class WahrBotModule extends AbstractModule {
         bind(WahrBot.class).toInstance(bot);
         bind(BotConfig.class).toProvider(bot::getConfig);
         bind(JDA.class).toProvider(bot::getApiClient);
+        bind(Jedis.class).toProvider(bot.getJedisPool()::getResource);
+        bind(Connection.class).toProvider(bot::getSqlConnection);
     }
 }

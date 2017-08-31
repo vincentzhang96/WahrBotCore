@@ -141,6 +141,20 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Storage -->
+        <dependency>
+            <!-- Redis -->
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>2.9.0</version>
+        </dependency>
+        <dependency>
+            <!-- PostgreSQL -->
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.1.4</version>
+        </dependency>
+
         <!-- Toolkit -->
         <dependency>
             <!-- GSON -->
