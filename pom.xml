@@ -10,7 +10,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <mainClass>com.divinitor.discord.wahrbot.core.WahrBot</mainClass>
+        <mainClass>com.divinitor.discord.wahrbot.core.WahrBotImpl</mainClass>
     </properties>
 
     <repositories>
