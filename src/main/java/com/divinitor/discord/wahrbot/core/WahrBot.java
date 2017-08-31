@@ -8,14 +8,19 @@ import com.divinitor.discord.wahrbot.core.util.gson.StandardGson;
 import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import lombok.Getter;
 import net.dv8tion.jda.core.JDA;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+import org.postgresql.ds.PGConnectionPoolDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
+import javax.sql.ConnectionPoolDataSource;
+import javax.sql.DataSource;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,6 +36,8 @@ import java.util.Properties;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class WahrBot {
+
+    private static final int DATA_TIMEOUT_MS = 2000;
 
     public static void main(String[] args) {
         WahrBot bot = new WahrBot();
@@ -52,7 +59,7 @@ public class WahrBot {
     private JDA apiClient;
 
     @Getter
-    private Connection sqlConnection;
+    private HikariDataSource dataSource;
 
     @Getter
     private JedisPool jedisPool;
@@ -87,23 +94,23 @@ public class WahrBot {
         //  Init SQL connection
         SQLCredentials sqlCredentials = config.getSqlCredentials();
         try {
-            Class.forName(sqlCredentials.getJdbcProviderName());
+            Class.forName("org.postgresql.Driver");
         } catch (ClassNotFoundException e) {
             throw new RuntimeException("Unable to find SQL driver class", e);
         }
 
-        String sqlUrl = String.format("jdbc:%s://%s:%d/%s",
-                sqlCredentials.getUrlScheme(),
-                sqlCredentials.getHost(),
-                sqlCredentials.getPort(),
-                sqlCredentials.getDatabase());
-        Properties sqlProps = new Properties();
-        sqlProps.setProperty("user", sqlCredentials.getUsername());
-        sqlProps.setProperty("password", sqlCredentials.getPassword());
-        sqlProps.setProperty("ApplicationName", getApplicationName());
         try {
-            sqlConnection = DriverManager.getConnection(sqlUrl, sqlProps);
-        } catch (SQLException e) {
+            String sqlUrl = String.format("jdbc:postgresql://%s:%d/%s",
+                    sqlCredentials.getHost(),
+                    sqlCredentials.getPort(),
+                    sqlCredentials.getDatabase());
+            HikariConfig hikariConfig = new HikariConfig();
+            hikariConfig.setJdbcUrl(sqlUrl);
+            hikariConfig.setUsername(sqlCredentials.getUsername());
+            hikariConfig.setPassword(sqlCredentials.getPassword());
+            hikariConfig.setConnectionTimeout(DATA_TIMEOUT_MS);
+            HikariDataSource dataSource = new HikariDataSource(hikariConfig);
+        } catch (Exception e) {
             throw new RuntimeException("Unable to connect to SQL server", e);
         }
 
@@ -114,7 +121,7 @@ public class WahrBot {
                 objectPoolConfig,
                 redisCredentials.getHost(),
                 redisCredentials.getPort(),
-                5000,
+                DATA_TIMEOUT_MS,
                 redisCredentials.getPassword(),
                 redisCredentials.getDatabase());
 
@@ -165,8 +172,8 @@ public class WahrBot {
 
         //  Shut down SQL connection
         try {
-            if (sqlConnection != null) {
-                sqlConnection.close();
+            if (dataSource != null) {
+                dataSource.close();
             }
         } catch (Exception e) {
             shutdownExceptions.put("sql", e);

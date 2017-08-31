@@ -154,6 +154,13 @@
             <artifactId>postgresql</artifactId>
             <version>42.1.4</version>
         </dependency>
+        <dependency>
+            <!-- Hikari JDBC Connection Pooling -->
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>2.6.1</version>
+            <scope>compile</scope>
+        </dependency>
 
         <!-- Toolkit -->
         <dependency>
