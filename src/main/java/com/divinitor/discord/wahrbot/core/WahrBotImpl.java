@@ -1,30 +1,46 @@
 package com.divinitor.discord.wahrbot.core;
 
+import com.codahale.metrics.ConsoleReporter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Reporter;
 import com.divinitor.discord.wahrbot.core.config.BotConfig;
 import com.divinitor.discord.wahrbot.core.config.RedisCredentials;
 import com.divinitor.discord.wahrbot.core.config.SQLCredentials;
 import com.divinitor.discord.wahrbot.core.util.WahrBotModule;
 import com.divinitor.discord.wahrbot.core.util.gson.StandardGson;
+import com.divinitor.discord.wahrbot.core.util.metrics.EventBusMetricSet;
+import com.google.common.eventbus.AsyncEventBus;
+import com.google.common.eventbus.SubscriberExceptionContext;
 import com.google.gson.Gson;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.Getter;
+import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.core.JDABuilder;
+import net.dv8tion.jda.core.exceptions.RateLimitedException;
+import net.dv8tion.jda.core.hooks.InterfacedEventManager;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
+import javax.security.auth.login.LoginException;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -37,7 +53,7 @@ public class WahrBotImpl implements WahrBot {
         bot.run();
     }
 
-    private final Logger LOGGER = LoggerFactory.getLogger(WahrBotImpl.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     @Getter
     private Injector injector;
@@ -57,18 +73,56 @@ public class WahrBotImpl implements WahrBot {
     @Getter
     private JedisPool jedisPool;
 
+    @Getter
+    private BotEventDispatcher eventListener;
+
+    @Getter
+    private AsyncEventBus eventBus;
+
+    @Getter
+    private ScheduledExecutorService executorService;
+
+    @Getter
+    private MetricRegistry metrics;
+
+    private EventBusMetricSet eventBusMetricSet;
+    private final Reporter reporter;
+
     public WahrBotImpl() {
         this.botDir = Paths.get(
                 System.getProperty("com.divinitor.discord.wahrbot.home", ""))
                 .toAbsolutePath();
         Runtime.getRuntime().addShutdownHook(new Thread(this::onShutdown));
+
+        this.executorService = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+
+        this.eventBus = new AsyncEventBus(this.executorService, this::handleEventBusException);
+        this.eventBusMetricSet = new EventBusMetricSet(eventBus);
+
+        this.metrics = new MetricRegistry();
+        this.metrics.registerAll(this.eventBusMetricSet);
+
+        ConsoleReporter re = ConsoleReporter.forRegistry(this.metrics)
+            .convertDurationsTo(TimeUnit.SECONDS)
+            .convertRatesTo(TimeUnit.SECONDS)
+            .build();
+        re.start(1, TimeUnit.MINUTES);
+        reporter = re;
+    }
+
+    private void handleEventBusException(Throwable exception, SubscriberExceptionContext context) {
+        this.eventBusMetricSet.incrEventExceptionCount();
+        String err = String.format("Exception while bussing an event %3$s to subscriber %1$s with listener %2$s",
+            context.getSubscriber().getClass().toString(),
+            context.getSubscriberMethod().toGenericString(),
+            context.getEvent().getClass().toString());
+        this.LOGGER.error(err, exception);
     }
 
     @Override
     public void run() {
         this.init();
         this.loadModules();
-        this.startHttpServer();
         this.startBot();
     }
 
@@ -124,7 +178,7 @@ public class WahrBotImpl implements WahrBot {
         this.injector = Guice.createInjector(new WahrBotModule(this));
 
         //  Start services
-
+        this.eventListener = this.injector.getInstance(BotEventDispatcher.class);
     }
 
     private void loadModules() {
@@ -132,14 +186,43 @@ public class WahrBotImpl implements WahrBot {
 
     }
 
-    private void startHttpServer() {
-        //  Start management HTTP server
-
-    }
-
     private void startBot() {
         //  Connect to Discord and begin general execution
+        LOGGER.info("Connecting to Discord...");
 
+        while (true) {
+            try {
+                this.apiClient = new JDABuilder(AccountType.BOT)
+                    .setToken(this.getConfig().getDiscord().getToken())
+                    .setAutoReconnect(true)
+                    .setEventManager(new InterfacedEventManager())
+                    .addEventListener(this.getEventListener())
+                    .buildBlocking();
+                break;
+            } catch (LoginException e) {
+                LOGGER.error("Bad Discord token", e);
+            } catch (RateLimitedException e) {
+                long retryAfter = e.getRetryAfter();
+                LOGGER.warn("Login was rate limited, retrying after {}s...",
+                    retryAfter);
+                try {
+                    Thread.sleep(Duration.ofSeconds(retryAfter).toMillis());
+                } catch (InterruptedException ignored) {
+                    //  Ignore
+                }
+            } catch (InterruptedException ignored) {
+                //  Ignore
+            }
+        }
+
+        LOGGER.info("Connected to Discord as {}#{}",
+            apiClient.getSelfUser().getName(),
+            apiClient.getSelfUser().getDiscriminator());
+
+        LOGGER.info("Connected to {} servers with {} channels and {} unique users",
+            String.format("%,d", apiClient.getGuilds().size()),
+            String.format("%,d", apiClient.getTextChannels().size()),
+            String.format("%,d", apiClient.getUsers().size()));
     }
 
     private void onShutdown() {

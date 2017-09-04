@@ -3,17 +3,9 @@ package com.divinitor.discord.wahrbot.core.util;
 import com.divinitor.discord.wahrbot.core.WahrBot;
 import com.divinitor.discord.wahrbot.core.WahrBotImpl;
 import com.divinitor.discord.wahrbot.core.config.BotConfig;
-import com.divinitor.discord.wahrbot.core.util.function.ThrowingRunnable;
-import com.divinitor.discord.wahrbot.core.util.function.ThrowingSupplier;
 import com.google.inject.AbstractModule;
-import com.google.inject.Provider;
 import net.dv8tion.jda.core.JDA;
 import redis.clients.jedis.Jedis;
-
-import java.sql.Connection;
-import java.util.concurrent.Callable;
-
-import static com.divinitor.discord.wahrbot.core.util.function.ThrowingSupplier.*;
 
 public class WahrBotModule extends AbstractModule {
 
@@ -29,7 +21,8 @@ public class WahrBotModule extends AbstractModule {
         bind(BotConfig.class).toProvider(bot::getConfig);
         bind(JDA.class).toProvider(bot::getApiClient);
         bind(Jedis.class).toProvider(bot.getJedisPool()::getResource);
-        bind(Connection.class).toProvider(supplier(bot.getDataSource()::getConnection)::get);
+        //  A bit of a misrepresentation, since the provider is a singleton, but the Connections are not.
+        bind(SQLConnectionProvider.class).toInstance(bot.getDataSource()::getConnection);
     }
 
 
