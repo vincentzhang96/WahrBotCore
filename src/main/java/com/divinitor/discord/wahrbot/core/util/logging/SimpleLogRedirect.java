@@ -1,15 +1,15 @@
 package com.divinitor.discord.wahrbot.core.util.logging;
 
-import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.utils.SimpleLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.invoke.MethodHandles;
 import java.util.function.Consumer;
 
 public class SimpleLogRedirect implements SimpleLog.LogListener {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(JDA.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private SimpleLogRedirect() {}
 
@@ -46,7 +46,7 @@ public class SimpleLogRedirect implements SimpleLog.LogListener {
 
     @Override
     public void onError(SimpleLog simpleLog, Throwable throwable) {
-        Logger logger = LoggerFactory.getLogger("JDA." + simpleLog.name);
+        Logger logger = LoggerFactory.getLogger(LOGGER.getName()  + "." + simpleLog.name);
         logger.error("JDA unhandled exception", throwable);
     }
 }

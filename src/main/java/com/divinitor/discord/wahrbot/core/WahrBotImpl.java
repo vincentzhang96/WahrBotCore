@@ -8,6 +8,7 @@ import com.divinitor.discord.wahrbot.core.config.RedisCredentials;
 import com.divinitor.discord.wahrbot.core.config.SQLCredentials;
 import com.divinitor.discord.wahrbot.core.util.WahrBotModule;
 import com.divinitor.discord.wahrbot.core.util.gson.StandardGson;
+import com.divinitor.discord.wahrbot.core.util.logging.SimpleLogRedirect;
 import com.divinitor.discord.wahrbot.core.util.metrics.EventBusMetricSet;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.SubscriberExceptionContext;
@@ -189,6 +190,7 @@ public class WahrBotImpl implements WahrBot {
     private void startBot() {
         //  Connect to Discord and begin general execution
         LOGGER.info("Connecting to Discord...");
+        SimpleLogRedirect.addListener();
 
         while (true) {
             try {
