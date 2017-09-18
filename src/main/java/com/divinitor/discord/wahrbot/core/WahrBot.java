@@ -2,6 +2,8 @@ package com.divinitor.discord.wahrbot.core;
 
 import com.codahale.metrics.MetricRegistry;
 import com.divinitor.discord.wahrbot.core.config.BotConfig;
+import com.divinitor.discord.wahrbot.core.config.dyn.DynConfigStore;
+import com.divinitor.discord.wahrbot.core.module.ModuleManager;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.inject.Injector;
 import net.dv8tion.jda.core.JDA;
@@ -24,7 +26,11 @@ public interface WahrBot {
 
     JDA getApiClient();
 
+    ModuleManager getModuleManager();
+
     DataSource getDataSource();
+
+    DynConfigStore getDynConfigStore();
 
     JedisPool getJedisPool();
 
@@ -33,4 +39,8 @@ public interface WahrBot {
     ScheduledExecutorService getExecutorService();
 
     MetricRegistry getMetrics();
+
+    void shutdown();
+
+    void restart();
 }

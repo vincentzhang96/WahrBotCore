@@ -8,11 +8,17 @@ public interface ModuleManager {
 
     void unloadModule(String moduleId);
 
-    void reloadModule(String moduleId, Version newVersion);
+    void reloadModule(String moduleId, Version newVersion) throws ModuleLoadException;
 
-    void loadModule(String moduleId, Version version);
+    void reloadModule(String moduleId) throws ModuleLoadException;
 
-    void loadModulesFromList();
+    void loadModule(String moduleId, Version version) throws ModuleLoadException;
+
+    void loadModule(String moduleId) throws ModuleLoadException;
+
+    void loadLatestModulesFromList() throws ModuleLoadException;
+
+    void unloadAll();
 
     /**
      * Returns a map of all modules that are loaded. The returned map is unmodifiable and contains interally weak

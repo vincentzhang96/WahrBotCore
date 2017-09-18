@@ -6,7 +6,11 @@ import com.codahale.metrics.Reporter;
 import com.divinitor.discord.wahrbot.core.config.BotConfig;
 import com.divinitor.discord.wahrbot.core.config.RedisCredentials;
 import com.divinitor.discord.wahrbot.core.config.SQLCredentials;
-import com.divinitor.discord.wahrbot.core.util.WahrBotModule;
+import com.divinitor.discord.wahrbot.core.config.dyn.DynConfigStore;
+import com.divinitor.discord.wahrbot.core.config.dyn.impl.RedisDynConfigStore;
+import com.divinitor.discord.wahrbot.core.module.ModuleManager;
+import com.divinitor.discord.wahrbot.core.module.ModuleManagerImpl;
+import com.divinitor.discord.wahrbot.core.util.inject.WahrBotModule;
 import com.divinitor.discord.wahrbot.core.util.gson.StandardGson;
 import com.divinitor.discord.wahrbot.core.util.logging.SimpleLogRedirect;
 import com.divinitor.discord.wahrbot.core.util.metrics.EventBusMetricSet;
@@ -89,6 +93,12 @@ public class WahrBotImpl implements WahrBot {
     private EventBusMetricSet eventBusMetricSet;
     private final Reporter reporter;
 
+    @Getter
+    private ModuleManager moduleManager;
+
+    @Getter
+    private DynConfigStore dynConfigStore;
+
     public WahrBotImpl() {
         this.botDir = Paths.get(
                 System.getProperty("com.divinitor.discord.wahrbot.home", ""))
@@ -108,7 +118,7 @@ public class WahrBotImpl implements WahrBot {
             .convertRatesTo(TimeUnit.SECONDS)
             .build();
         re.start(1, TimeUnit.MINUTES);
-        reporter = re;
+        this.reporter = re;
     }
 
     private void handleEventBusException(Throwable exception, SubscriberExceptionContext context) {
@@ -180,11 +190,18 @@ public class WahrBotImpl implements WahrBot {
 
         //  Start services
         this.eventListener = this.injector.getInstance(BotEventDispatcher.class);
+        this.dynConfigStore = new RedisDynConfigStore();
+        this.injector.injectMembers(this.dynConfigStore);
+
+
     }
 
     private void loadModules() {
         //  Load modules
+        this.moduleManager = new ModuleManagerImpl(this);
+        this.injector.injectMembers(this.moduleManager);
 
+        this.moduleManager.loadLatestModulesFromList();
     }
 
     private void startBot() {
@@ -232,8 +249,10 @@ public class WahrBotImpl implements WahrBot {
         Map<String, Exception> shutdownExceptions = new HashMap<>();
 
         //  Shut down modules
+        this.moduleManager.unloadAll();
 
         //  Shut down services
+
 
         //  Shut down API client
         try {
@@ -272,5 +291,15 @@ public class WahrBotImpl implements WahrBot {
     @Override
     public String getApplicationName() {
         return "WahrBot";
+    }
+
+    @Override
+    public void shutdown() {
+        System.exit(0);
+    }
+
+    @Override
+    public void restart() {
+        System.exit(20);
     }
 }

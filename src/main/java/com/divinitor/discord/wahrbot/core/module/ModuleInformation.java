@@ -15,6 +15,12 @@ public class ModuleInformation {
 
     private Version version;
 
+    private boolean reloadable;
+
     public ModuleInformation() {
+    }
+
+    public String getIdAndVersion() {
+        return id + ":" + version;
     }
 }
