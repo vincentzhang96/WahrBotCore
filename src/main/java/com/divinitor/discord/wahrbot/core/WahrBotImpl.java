@@ -10,6 +10,8 @@ import com.divinitor.discord.wahrbot.core.config.dyn.DynConfigStore;
 import com.divinitor.discord.wahrbot.core.config.dyn.impl.RedisDynConfigStore;
 import com.divinitor.discord.wahrbot.core.module.ModuleManager;
 import com.divinitor.discord.wahrbot.core.module.ModuleManagerImpl;
+import com.divinitor.discord.wahrbot.core.service.ServiceBus;
+import com.divinitor.discord.wahrbot.core.service.impl.ServiceBusImpl;
 import com.divinitor.discord.wahrbot.core.util.inject.WahrBotModule;
 import com.divinitor.discord.wahrbot.core.util.gson.StandardGson;
 import com.divinitor.discord.wahrbot.core.util.logging.SimpleLogRedirect;
@@ -99,6 +101,9 @@ public class WahrBotImpl implements WahrBot {
     @Getter
     private DynConfigStore dynConfigStore;
 
+    @Getter
+    private ServiceBus serviceBus;
+
     public WahrBotImpl() {
         this.botDir = Paths.get(
                 System.getProperty("com.divinitor.discord.wahrbot.home", ""))
@@ -119,6 +124,7 @@ public class WahrBotImpl implements WahrBot {
             .build();
         re.start(1, TimeUnit.MINUTES);
         this.reporter = re;
+        this.serviceBus = new ServiceBusImpl();
     }
 
     private void handleEventBusException(Throwable exception, SubscriberExceptionContext context) {
@@ -190,10 +196,11 @@ public class WahrBotImpl implements WahrBot {
 
         //  Start services
         this.eventListener = this.injector.getInstance(BotEventDispatcher.class);
+        this.serviceBus.registerService(eventListener);
+
         this.dynConfigStore = new RedisDynConfigStore();
         this.injector.injectMembers(this.dynConfigStore);
-
-
+        this.serviceBus.registerService(DynConfigStore.class, this.dynConfigStore);
     }
 
     private void loadModules() {
@@ -248,11 +255,23 @@ public class WahrBotImpl implements WahrBot {
         LOGGER.info("Shutting down {}", this.getApplicationName());
         Map<String, Exception> shutdownExceptions = new HashMap<>();
 
-        //  Shut down modules
-        this.moduleManager.unloadAll();
-
         //  Shut down services
+        try {
+            if (this.serviceBus != null) {
+                this.serviceBus.unregisterAll();
+            }
+        } catch (Exception e) {
+            shutdownExceptions.put("service", e);
+        }
 
+        //  Shut down modules
+        try {
+            if (this.moduleManager != null) {
+                this.moduleManager.unloadAll();
+            }
+        } catch (Exception e) {
+            shutdownExceptions.put("module", e);
+        }
 
         //  Shut down API client
         try {

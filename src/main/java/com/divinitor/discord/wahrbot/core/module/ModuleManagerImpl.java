@@ -102,14 +102,16 @@ public class ModuleManagerImpl implements ModuleManager {
             }
         }
     }
-
-    @SuppressWarnings("unchecked")
     @Override
     public void loadModule(String moduleId, Version version) throws ModuleLoadException {
+        this.loadModuleImpl(moduleId, version, false);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Module loadModuleImpl(String moduleId, Version version, boolean bulk) throws ModuleLoadException {
         moduleId = moduleId.toLowerCase();
         if (version == null) {
-            this.loadModule(moduleId);
-            return;
+            return this.loadModuleImpl(moduleId, bulk);
         }
 
         try (Lockable l = acquire(this.lock.writeLock())) {
@@ -167,19 +169,36 @@ public class ModuleManagerImpl implements ModuleManager {
 
             try {
                 module.init(handle);
-                this.bot.getEventBus().register(module);
+                this.tryRegister(module);
             } catch (ModuleLoadException mle) {
                 throw mle;
             } catch (Exception e) {
                 throw new ModuleLoadException("Uncaught exception while initializing module " + modIdAndVer, e);
             }
 
+            if (!bulk) {
+                try {
+                    module.postBatchInit();
+                } catch (ModuleLoadException mle) {
+                    throw mle;
+                } catch (Exception e) {
+                    throw new ModuleLoadException("Uncaught exception while post batch init module " + modIdAndVer, e);
+                }
+            }
+
             LOGGER.info("Loaded module {}", info.getIdAndVersion());
+
+            return module;
         }
     }
 
+
     @Override
     public void loadModule(String modId) throws ModuleLoadException {
+        this.loadModuleImpl(modId, false);
+    }
+
+    public Module loadModuleImpl(String modId, boolean bulk) throws ModuleLoadException {
         String moduleId = modId.toLowerCase();
         Path dir = this.modDir.resolve(moduleId);
 
@@ -206,7 +225,7 @@ public class ModuleManagerImpl implements ModuleManager {
 
         LOGGER.info("Discovered module {}:{}", moduleId, latest);
 
-        loadModule(moduleId, latest);
+        return loadModuleImpl(moduleId, latest, bulk);
     }
 
     @Override
@@ -216,6 +235,14 @@ public class ModuleManagerImpl implements ModuleManager {
             HashSet<String> loaded = new HashSet<>(this.loadedModules.keySet());
             loaded.forEach(this::unloadModule);
         }
+    }
+
+    private void bulkLoadModule(String modId) throws ModuleLoadException {
+        this.loadModuleImpl(modId, true);
+    }
+
+    private void bulkLoadModule(String modId, Version version) throws ModuleLoadException {
+        this.loadModuleImpl(modId, version, true);
     }
 
     @Override
@@ -230,7 +257,7 @@ public class ModuleManagerImpl implements ModuleManager {
             try (Lockable l = acquire(lock.writeLock())) {
                 values.forEach((k, v) -> {
                     try {
-                        this.loadModule(k, Version.valueOf(v));
+                        this.bulkLoadModule(k, Version.valueOf(v));
                     } catch (ModuleLoadException mle) {
                         if (aggregate.get() == null) {
                             aggregate.set(mle);
@@ -246,6 +273,8 @@ public class ModuleManagerImpl implements ModuleManager {
                         }
                     }
                 });
+
+
             }
         } catch (FileNotFoundException fnfe) {
             throw new ModuleLoadException("Could not load module list");
@@ -283,6 +312,23 @@ public class ModuleManagerImpl implements ModuleManager {
         try {
             this.bot.getEventBus().unregister(o);
         } catch (IllegalArgumentException ignored) {
+        }
+
+        try {
+            this.bot.getServiceBus().unregisterService(o.getClass());
+        } catch (NoSuchElementException ignored) {
+        }
+    }
+
+    private void tryRegister(Object o) {
+        try {
+            this.bot.getEventBus().register(o);
+        } catch (Exception ignored) {
+        }
+
+        try {
+            this.bot.getServiceBus().registerService(o);
+        } catch (Exception ignored) {
         }
     }
 
