@@ -27,9 +27,24 @@ import static com.divinitor.discord.wahrbot.core.util.concurrent.Lockable.acquir
 
 public class ModuleManagerImpl implements ModuleManager {
 
+    /**
+     * Map of loaded modules, keyed by id.
+     */
     private final Map<String, ModuleHandleImpl> loadedModules;
+
+    /**
+     * RW lock for loadedModules.
+     */
     private final ReentrantReadWriteLock lock;
+
+    /**
+     * Bot instance.
+     */
     private final WahrBotImpl bot;
+
+    /**
+     * Directory to look for modules for.
+     */
     private final Path modDir;
 
     private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -46,7 +61,18 @@ public class ModuleManagerImpl implements ModuleManager {
         unloadModule(moduleId, false);
     }
 
-    private boolean unloadModule(String moduleId, boolean reload) {
+    private void endOfAppUnload(String moduleId) {
+        unloadModule(moduleId, true);
+    }
+
+    /**
+     * Unloads the specified module, preventing it from being unloaded if it cannot be unloaded and we're trying to
+     * reload. Un-unloadable modules can be unloaded only at the end of the application lifecycle.
+     * @param moduleId The module to unload
+     * @param endOfApp Whether or not this is the end of the application lifecycle
+     * @return True if unloaded successfully, false if the module cannot be unloaded and this is not end of app
+     */
+    private boolean unloadModule(String moduleId, boolean endOfApp) {
         moduleId = moduleId.toLowerCase();
         try (Lockable l = acquire(this.lock.writeLock())) {
             ModuleHandleImpl moduleHandle = this.loadedModules.remove(moduleId);
@@ -54,7 +80,7 @@ public class ModuleManagerImpl implements ModuleManager {
                 throw new NoSuchElementException(moduleId);
             }
 
-            if (reload && !moduleHandle.getModuleInfo().isReloadable()) {
+            if (!endOfApp && !moduleHandle.getModuleInfo().isReloadable()) {
                 this.loadedModules.put(moduleId, moduleHandle);
                 LOGGER.warn("Attempted to unload {} which cannot be unloaded", moduleId);
                 return false;
@@ -85,7 +111,7 @@ public class ModuleManagerImpl implements ModuleManager {
         //  Acquire the lock once to keep things atomic
         try (Lockable l = acquire(this.lock.writeLock())) {
             LOGGER.info("Reloading {} to v{}", moduleId, newVersion);
-            if (this.unloadModule(moduleId, true)) {
+            if (this.unloadModule(moduleId, false)) {
                 this.loadModule(moduleId, newVersion);
             }
         }
@@ -97,7 +123,7 @@ public class ModuleManagerImpl implements ModuleManager {
         //  Acquire the lock once to keep things atomic
         try (Lockable l = acquire(this.lock.writeLock())) {
             LOGGER.info("Reloading {} to latest", moduleId);
-            if (this.unloadModule(moduleId, true)) {
+            if (this.unloadModule(moduleId, false)) {
                 this.loadModule(moduleId);
             }
         }
@@ -233,7 +259,7 @@ public class ModuleManagerImpl implements ModuleManager {
         try (Lockable l = acquire(this.lock.writeLock())) {
             //  Perform a copy since can't modify loadedModules while iterating, so iterate on copy
             HashSet<String> loaded = new HashSet<>(this.loadedModules.keySet());
-            loaded.forEach(this::unloadModule);
+            loaded.forEach(this::endOfAppUnload);
         }
     }
 
