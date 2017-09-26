@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 
 import static com.divinitor.discord.wahrbot.core.util.concurrent.Lockable.acquire;
+import static java.nio.file.StandardOpenOption.*;
 
 public class ModuleManagerImpl implements ModuleManager {
 
@@ -269,6 +270,28 @@ public class ModuleManagerImpl implements ModuleManager {
 
     private void bulkLoadModule(String modId, Version version) throws ModuleLoadException {
         this.loadModuleImpl(modId, version, true);
+    }
+
+    @Override
+    public void saveCurrentModuleList() throws IOException {
+        Path moduleList = this.modDir.resolve("modules.json");
+
+        try (BufferedWriter writer = Files.newBufferedWriter(moduleList,
+            StandardCharsets.UTF_8,
+            WRITE, CREATE, TRUNCATE_EXISTING)) {
+            Map<String, String> values;
+            try (Lockable l = acquire(this.lock.readLock())) {
+                values = this.loadedModules.values().stream()
+                    .collect(Collectors.toMap(
+                        v -> v.getModuleInfo().getId(),
+                        v -> v.getModuleInfo().getVersion().toString()));
+            }
+
+            writer.write(StandardGson.pretty().toJson(values));
+
+            writer.flush();
+            LOGGER.info("Module list saved");
+        }
     }
 
     @Override

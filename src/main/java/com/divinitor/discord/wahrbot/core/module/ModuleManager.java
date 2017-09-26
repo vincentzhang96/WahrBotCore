@@ -2,6 +2,7 @@ package com.divinitor.discord.wahrbot.core.module;
 
 import com.github.zafarkhaja.semver.Version;
 
+import java.io.IOException;
 import java.util.Map;
 
 public interface ModuleManager {
@@ -17,6 +18,8 @@ public interface ModuleManager {
     void loadModule(String moduleId) throws ModuleLoadException;
 
     void loadLatestModulesFromList() throws ModuleLoadException;
+
+    void saveCurrentModuleList() throws IOException;
 
     void unloadAll();
 

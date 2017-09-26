@@ -7,6 +7,7 @@ import com.divinitor.discord.wahrbot.core.config.BotConfig;
 import com.divinitor.discord.wahrbot.core.config.RedisCredentials;
 import com.divinitor.discord.wahrbot.core.config.SQLCredentials;
 import com.divinitor.discord.wahrbot.core.config.dyn.DynConfigStore;
+import com.divinitor.discord.wahrbot.core.config.dyn.impl.CachingDynConfigStore;
 import com.divinitor.discord.wahrbot.core.config.dyn.impl.RedisDynConfigStore;
 import com.divinitor.discord.wahrbot.core.module.ModuleManager;
 import com.divinitor.discord.wahrbot.core.module.ModuleManagerImpl;
@@ -198,8 +199,9 @@ public class WahrBotImpl implements WahrBot {
         this.eventListener = this.injector.getInstance(BotEventDispatcher.class);
         this.serviceBus.registerService(eventListener);
 
-        this.dynConfigStore = new RedisDynConfigStore();
-        this.injector.injectMembers(this.dynConfigStore);
+        RedisDynConfigStore rdcs = new RedisDynConfigStore();
+        this.injector.injectMembers(rdcs);
+        this.dynConfigStore = new CachingDynConfigStore(rdcs);
         this.serviceBus.registerService(DynConfigStore.class, this.dynConfigStore);
     }
 
@@ -267,6 +269,7 @@ public class WahrBotImpl implements WahrBot {
         //  Shut down modules
         try {
             if (this.moduleManager != null) {
+                this.moduleManager.saveCurrentModuleList();
                 this.moduleManager.unloadAll();
             }
         } catch (Exception e) {
