@@ -1,14 +1,13 @@
 package com.divinitor.discord.wahrbot.core.command;
 
-public interface CommandRegistry {
+public interface CommandRegistry extends Command {
 
     /**
      * Executes a command for the given command line, if valid.
-     * @param commandLine The command line to execute
      * @param context The command execution context
      * @return The result of the command
      */
-    CommandResult execute(String commandLine, CommandContext context);
+    CommandResult invoke(CommandContext context);
 
     /**
      * Sets the parent of this command registry. Used for subcommand chaining

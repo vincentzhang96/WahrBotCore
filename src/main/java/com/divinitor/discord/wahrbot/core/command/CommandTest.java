@@ -1,7 +1,9 @@
 package com.divinitor.discord.wahrbot.core.command;
 
-public class CommandTokenizer {
+public class CommandTest {
 
+    public void test() {
 
+    }
 
 }

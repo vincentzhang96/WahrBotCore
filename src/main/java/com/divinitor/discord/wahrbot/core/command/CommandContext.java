@@ -1,34 +1,99 @@
 package com.divinitor.discord.wahrbot.core.command;
 
 import com.divinitor.discord.wahrbot.core.WahrBot;
-import lombok.Getter;
-import net.dv8tion.jda.core.entities.Channel;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
-import net.dv8tion.jda.core.events.message.priv.PrivateMessageReceivedEvent;
+import com.divinitor.discord.wahrbot.core.store.ServerStorage;
+import com.divinitor.discord.wahrbot.core.store.UserStorage;
+import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.core.events.Event;
 
-import java.util.UUID;
+public interface CommandContext {
 
-@Getter
-public class CommandContext {
+    /**
+     * Gets the bot that this command is being executed on.
+     * @return The WahrBot instance
+     */
+    WahrBot getBot();
 
-    private WahrBot bot;
-    private Channel channel;
-    private CommandContext parent;
-    private String fullCmdline;
+    /**
+     * Gets the JDA message object that invoked this command.
+     * @return The JDA message that invoked this command
+     */
+    Message getMessage();
 
+    /**
+     * Gets the JDA channel object that the command was invoked in.
+     * @return The JDA channel that invoked this command
+     */
+    TextChannel getInvocationChannel();
 
-    private MessageReceivedEvent event;
+    /**
+     * Gets the JDA channel object that command feedback responses should be sent to. In most cases, this will be the
+     * same as the invocation channel.
+     * @return The JDA channel that should be used for command feedback
+     */
+    TextChannel getFeedbackChannel();
 
+    /**
+     * Gets the JDA user that invoked this command.
+     * @return The JDA user that invoked this command
+     */
+    User getInvoker();
 
-    public static CommandContext from(PrivateMessageReceivedEvent event) {
-        //  TODO
-        return new CommandContext();
+    /**
+     * Gets the JDA user that impersonated this command invocation. Null if this is not an impersonation situation.
+     * @return The JDA user that impersonated the invocation of this command, or null if N/A
+     */
+    User getImpersonator();
+
+    /**
+     * Gets the JDA member that invoked this command. Null if this is not an invocation from a server.
+     * @return The JDA member that invoked this command, or null if private
+     */
+    Member getMember();
+
+    /**
+     * Gets the JDA server that invoked this command, or null if this was a private message.
+     * @return The JDA server that invoked this command, or null if private
+     */
+    Guild getServer();
+
+    /**
+     * Gets the server storage associated with this server. For private messages, this is null.
+     * @return The ServerStorage associated with this server, or a null if private
+     */
+    ServerStorage getServerStorage();
+
+    /**
+     * Gets the user storage associated with the command invoker.
+     * @return The UserStorage associated with the command invoker
+     */
+    UserStorage getUserStorage();
+
+    /**
+     * Gets the current command line that this command is being executed on.
+     * @return The current command line for this context
+     */
+    CommandLine getCommandLine();
+
+    /**
+     * Get the command registry that owns this command.
+     * @return The owning command registry
+     */
+    CommandRegistry getRegistry();
+
+    /**
+     * Get the JDA event that invoked this command.
+     *
+     * <b>WARNING:</b> The event's type is not guaranteed. Perform the necessary checks and do not assume.
+     * @return The JDA Event that caused the invocation of this command.
+     */
+    Event getEvent();
+
+    /**
+     * Whether or not this command was invoked from a private message.
+     * @return True if private, false otherwise
+     */
+    default boolean isPrivate() {
+        return this.getServer() == null;
     }
-
-    public static CommandContext from(GuildMessageReceivedEvent event) {
-        //  TODO
-        return new CommandContext();
-    }
-
 }

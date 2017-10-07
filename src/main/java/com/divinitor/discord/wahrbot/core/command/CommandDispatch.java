@@ -7,8 +7,6 @@ import net.dv8tion.jda.core.entities.ISnowflake;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.priv.PrivateMessageReceivedEvent;
 
-import static com.divinitor.discord.wahrbot.core.command.CommandTokenizer.*;
-
 public class CommandDispatch {
 
     public static final String DEFAULT_COMMAND_PREFIX_KEY = "com.divinitor.discord.wahrbot.core.command.prefix.default";
@@ -29,7 +27,7 @@ public class CommandDispatch {
         CommandLine cmdline = new CommandLine(event.getMessage().getRawContent());
         cmdline.takeOptionalPrefix(this.defaultCommandPrefixHandle.get());
 
-        CommandContext commandContext = CommandContext.from(event);
+
 
 
     }
@@ -41,8 +39,12 @@ public class CommandDispatch {
             return;
         }
 
-        CommandContext commandContext = CommandContext.from(event);
+        StandardGuildCommandContext context = new StandardGuildCommandContext(this.bot,
+            event,
+            cmdline,
+            this.rootRegistry);
 
+        this.rootRegistry.invoke(context);
     }
 
     public String getPrefixForServer(ISnowflake guildId) {
