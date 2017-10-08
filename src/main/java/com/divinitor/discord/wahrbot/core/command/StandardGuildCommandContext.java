@@ -4,9 +4,12 @@ import com.divinitor.discord.wahrbot.core.WahrBot;
 import com.divinitor.discord.wahrbot.core.store.ServerStorage;
 import com.divinitor.discord.wahrbot.core.store.UserStorage;
 import lombok.Getter;
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
+
+import java.util.Locale;
 
 @Getter
 public class StandardGuildCommandContext implements CommandContext {
@@ -24,6 +27,11 @@ public class StandardGuildCommandContext implements CommandContext {
         this.event = event;
         this.commandLine = commandLine;
         this.registry = registry;
+    }
+
+    @Override
+    public JDA getApi() {
+        return bot.getApiClient();
     }
 
     @Override
@@ -76,5 +84,11 @@ public class StandardGuildCommandContext implements CommandContext {
     @Override
     public Event getEvent() {
         return this.event;
+    }
+
+    @Override
+    public Locale getLocale() {
+        //  TODO
+        return this.bot.getLocalizer().getDefaultLocale();
     }
 }

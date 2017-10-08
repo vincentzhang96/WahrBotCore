@@ -3,6 +3,7 @@ package com.divinitor.discord.wahrbot.core;
 import com.codahale.metrics.MetricRegistry;
 import com.divinitor.discord.wahrbot.core.config.BotConfig;
 import com.divinitor.discord.wahrbot.core.config.dyn.DynConfigStore;
+import com.divinitor.discord.wahrbot.core.i18n.Localizer;
 import com.divinitor.discord.wahrbot.core.module.ModuleManager;
 import com.divinitor.discord.wahrbot.core.service.ServiceBus;
 import com.google.common.eventbus.AsyncEventBus;
@@ -42,6 +43,8 @@ public interface WahrBot {
     MetricRegistry getMetrics();
 
     ServiceBus getServiceBus();
+
+    Localizer getLocalizer();
 
     void shutdown();
 

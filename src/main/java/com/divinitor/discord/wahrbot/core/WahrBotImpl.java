@@ -9,6 +9,8 @@ import com.divinitor.discord.wahrbot.core.config.SQLCredentials;
 import com.divinitor.discord.wahrbot.core.config.dyn.DynConfigStore;
 import com.divinitor.discord.wahrbot.core.config.dyn.impl.CachingDynConfigStore;
 import com.divinitor.discord.wahrbot.core.config.dyn.impl.RedisDynConfigStore;
+import com.divinitor.discord.wahrbot.core.i18n.Localizer;
+import com.divinitor.discord.wahrbot.core.i18n.LocalizerImpl;
 import com.divinitor.discord.wahrbot.core.module.ModuleManager;
 import com.divinitor.discord.wahrbot.core.module.ModuleManagerImpl;
 import com.divinitor.discord.wahrbot.core.service.ServiceBus;
@@ -44,8 +46,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -105,6 +106,9 @@ public class WahrBotImpl implements WahrBot {
     @Getter
     private ServiceBus serviceBus;
 
+    @Getter
+    private Localizer localizer;
+
     public WahrBotImpl() {
         this.botDir = Paths.get(
                 System.getProperty("com.divinitor.discord.wahrbot.home", ""))
@@ -112,6 +116,7 @@ public class WahrBotImpl implements WahrBot {
         Runtime.getRuntime().addShutdownHook(new Thread(this::onShutdown));
 
         this.executorService = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+        this.localizer = new LocalizerImpl();
 
         this.eventBus = new AsyncEventBus(this.executorService, this::handleEventBusException);
         this.eventBusMetricSet = new EventBusMetricSet(eventBus);

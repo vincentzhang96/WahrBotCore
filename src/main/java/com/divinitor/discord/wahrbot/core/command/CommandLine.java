@@ -68,7 +68,7 @@ public class CommandLine {
             throw new NoSuchElementException("End of command line");
         }
 
-        if (line.startsWith("\"")) {
+        if (this.line.startsWith("\"")) {
             int endIndex = consumeQuotedString(this.line);
             if (endIndex == -1) {
                 String ret = this.line.substring(1);

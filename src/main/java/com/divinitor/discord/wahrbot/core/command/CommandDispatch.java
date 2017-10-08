@@ -11,6 +11,12 @@ public class CommandDispatch {
 
     public static final String DEFAULT_COMMAND_PREFIX_KEY = "com.divinitor.discord.wahrbot.core.command.prefix.default";
 
+    private static final String ROOT_LOCALE_KEY = "com.divinitor.discord.wahrbot.cmd.";
+
+    public static String getRootLocaleKey() {
+        return ROOT_LOCALE_KEY;
+    }
+
     private WahrBot bot;
     private final CommandRegistry rootRegistry;
 
@@ -18,7 +24,7 @@ public class CommandDispatch {
 
     public CommandDispatch(WahrBot bot) {
         this.bot = bot;
-        rootRegistry = null;
+        this.rootRegistry = new RootCommandRegistry(getRootLocaleKey() + "root");
         this.defaultCommandPrefixHandle = bot.getDynConfigStore().getStringHandle(DEFAULT_COMMAND_PREFIX_KEY);
     }
 
@@ -26,10 +32,10 @@ public class CommandDispatch {
     public void handlePrivateMessage(PrivateMessageReceivedEvent event) {
         CommandLine cmdline = new CommandLine(event.getMessage().getRawContent());
         cmdline.takeOptionalPrefix(this.defaultCommandPrefixHandle.get());
+        //  TODO
+        CommandContext context = null;
 
-
-
-
+        this.rootRegistry.invoke(context);
     }
 
     @Subscribe
@@ -53,4 +59,15 @@ public class CommandDispatch {
     }
 
 
+    class RootCommandRegistry extends CommandRegistryImpl {
+
+        public RootCommandRegistry(String nameKey) {
+            super(nameKey, null);
+        }
+
+        @Override
+        public String getCommandNameChain(CommandContext context) {
+            return CommandDispatch.this.getPrefixForServer(context.getServer());
+        }
+    }
 }

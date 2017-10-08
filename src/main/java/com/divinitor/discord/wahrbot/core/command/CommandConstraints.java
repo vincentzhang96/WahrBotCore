@@ -8,6 +8,14 @@ import net.dv8tion.jda.core.utils.PermissionUtil;
 
 public class CommandConstraints {
 
+    public static <T> CommandConstraint<T> allow() {
+        return context -> true;
+    }
+
+    public static <T> CommandConstraint<T> deny() {
+        return context -> false;
+    }
+
     /**
      * If the context user has all of the given permissions. Always fails for direct messages.
      * @param perms The required permissions

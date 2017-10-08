@@ -35,7 +35,7 @@ public interface CommandRegistry extends Command {
      * @param context The command execution context
      * @return The command that matches the command line and context, or null if no match
      */
-    Command getCommandFor(String commandLine, CommandContext context);
+    Command getCommandFor(CommandLine commandLine, CommandContext context);
 
     /**
      * Determines whether or not the given command line in the given context can be executed.
@@ -43,7 +43,7 @@ public interface CommandRegistry extends Command {
      * @param context The command execution context
      * @return True if the execution would be allowed, false otherwise.
      */
-    boolean hasPermissionFor(String commandLine, CommandContext context);
+    boolean hasPermissionFor(CommandLine commandLine, CommandContext context);
 
     /**
      * Sets the default command to be executed if no subcommands are specified. Cannot be set on the root registry. By
@@ -56,7 +56,28 @@ public interface CommandRegistry extends Command {
      * Register a command to this command registry. Its full command path will be a space separated list of the registry
      * path followed by the resolved command locale key.
      * @param command The command to register
-     * @param commandKey The command's base locale key
+     * @param commandKey The command's identifier key and base locale key
      */
     void registerCommand(Command command, String commandKey);
+
+    /**
+     * Removes a command from this command registry by its key.
+     * @param commandKey The command's identifier key.
+     */
+    void unregisterCommand(String commandKey);
+
+    /**
+     * Checks if a command under the given command key is registered or not.
+     * @param commandKey The command key to look up
+     * @return Whether or not a command under the given command key is registered or not
+     */
+    boolean hasCommand(String commandKey);
+
+    /**
+     * Gets the command registry invocation chain required, e.g. ".dn tracker blessbuff", that this registry is at.
+     * This can be considered this registry's command "path."
+     * @param context The command invocation context.
+     * @return This registry's invocation chain.
+     */
+    String getCommandNameChain(CommandContext context);
 }

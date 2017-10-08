@@ -3,8 +3,11 @@ package com.divinitor.discord.wahrbot.core.command;
 import com.divinitor.discord.wahrbot.core.WahrBot;
 import com.divinitor.discord.wahrbot.core.store.ServerStorage;
 import com.divinitor.discord.wahrbot.core.store.UserStorage;
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.Event;
+
+import java.util.Locale;
 
 public interface CommandContext {
 
@@ -13,6 +16,12 @@ public interface CommandContext {
      * @return The WahrBot instance
      */
     WahrBot getBot();
+
+    /**
+     * Gets the API instance that this command is being executed on.
+     * @return The API client
+     */
+    JDA getApi();
 
     /**
      * Gets the JDA message object that invoked this command.
@@ -96,4 +105,10 @@ public interface CommandContext {
     default boolean isPrivate() {
         return this.getServer() == null;
     }
+
+    /**
+     * Returns the locale for this invocation.
+     * @return The locale to use
+     */
+    Locale getLocale();
 }
