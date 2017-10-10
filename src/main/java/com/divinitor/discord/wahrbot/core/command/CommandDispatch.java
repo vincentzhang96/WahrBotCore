@@ -2,6 +2,7 @@ package com.divinitor.discord.wahrbot.core.command;
 
 import com.divinitor.discord.wahrbot.core.WahrBot;
 import com.divinitor.discord.wahrbot.core.config.dyn.DynConfigHandle;
+import com.divinitor.discord.wahrbot.core.i18n.ResourceBundleBundle;
 import com.google.common.eventbus.Subscribe;
 import net.dv8tion.jda.core.entities.ISnowflake;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
@@ -26,6 +27,11 @@ public class CommandDispatch {
         this.bot = bot;
         this.rootRegistry = new RootCommandRegistry(getRootLocaleKey() + "root");
         this.defaultCommandPrefixHandle = bot.getDynConfigStore().getStringHandle(DEFAULT_COMMAND_PREFIX_KEY);
+
+        //  Load command localization strings
+        //  TODO use an external DVLOC bundle
+        this.bot.getLocalizer().registerBundle("com.divinitor.discord.wahrbot.core.command",
+            new ResourceBundleBundle("com.divinitor.discord.wahrbot.core.command.locale"));
     }
 
     @Subscribe

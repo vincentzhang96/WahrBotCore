@@ -4,6 +4,7 @@ import com.divinitor.discord.wahrbot.core.i18n.Localizer;
 import com.divinitor.discord.wahrbot.core.util.concurrent.Lockable;
 import com.google.inject.Inject;
 import lombok.Getter;
+import lombok.Setter;
 import net.dv8tion.jda.core.EmbedBuilder;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,9 +21,19 @@ public class CommandRegistryImpl implements CommandRegistry {
     private CommandRegistry parent;
     private final String nameKey;
     private Command defaultCommand;
+    @Setter
+    private CommandConstraint<CommandContext> userPermissionConstraints;
+    @Setter
+    private CommandConstraint<CommandContext> botPermissionConstraints;
+    @Setter
+    private CommandConstraint<CommandContext> otherConstraints;
 
     @Inject
     private Localizer loc;
+
+    public CommandRegistryImpl(String nameKey) {
+        this(nameKey, null);
+    }
 
     public CommandRegistryImpl(String nameKey, CommandRegistry parent) {
         this.nameKey = nameKey;
@@ -30,6 +41,9 @@ public class CommandRegistryImpl implements CommandRegistry {
         this.commands = new HashMap<>();
         this.commandLock = new ReentrantReadWriteLock();
         this.defaultCommand = new HelpCommand();
+        this.userPermissionConstraints = CommandConstraints.allow();
+        this.botPermissionConstraints = CommandConstraints.allow();
+        this.otherConstraints = CommandConstraints.allow();
     }
 
     @Override
@@ -165,6 +179,21 @@ public class CommandRegistryImpl implements CommandRegistry {
     }
 
     @Override
+    public CommandRegistry getChild(String registryNameKey) {
+        CommandWrapper wrapper = this.commands.get(registryNameKey);
+        if (wrapper == null) {
+            return null;
+        }
+
+        Command c = wrapper.getCommand();
+        if (c instanceof CommandRegistry) {
+            return (CommandRegistry) c;
+        }
+
+        return null;
+    }
+
+    @Override
     public String getCommandNameChain(CommandContext context) {
         if (this.parent != null) {
             return this.parent.getCommandNameChain(context)
@@ -172,6 +201,21 @@ public class CommandRegistryImpl implements CommandRegistry {
         } else {
             return "";
         }
+    }
+
+    @Override
+    public CommandConstraint<CommandContext> getUserPermissionConstraints() {
+        return this.userPermissionConstraints;
+    }
+
+    @Override
+    public CommandConstraint<CommandContext> getBotPermissionConstraints() {
+        return this.botPermissionConstraints;
+    }
+
+    @Override
+    public CommandConstraint<CommandContext> getOtherConstraints() {
+        return this.otherConstraints;
     }
 
     @Getter

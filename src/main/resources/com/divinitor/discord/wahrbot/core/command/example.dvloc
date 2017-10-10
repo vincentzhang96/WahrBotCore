@@ -1,0 +1,31 @@
+//  Localization strings for default help command
+BUNDLE com.divinitor.discord.wahrbot.cmd.help
+
+LOCALE en
+{
+    .: "help"
+    title: "`{%NAMECHAIN%}` Command Help"
+    desc: "Available commands under `{%NAMECHAIN%}`"
+    footer: "Use `{%NAMECHAIN%} [..] COMMANDNAME` for more information"
+    category:
+    {
+        misc: "Misc Commands"
+    }
+    command: "- `{%NAMECHAIN%} {0}`: {1}"
+}
+
+LOCALE en_us = en {}
+LOCALE en_uk = en {}
+
+LOCALE jp
+{
+    .: "ヘルプ"
+    title: "`{%NAMECHAIN%}` コマンド情報"
+    desc: "`{%NAMECHAIN%}`のコマンド"
+    footer: "詳細については、`{%NAMECHAIN%} [..] コマンド名`を使用してください"
+    category:
+    {
+        misc: "雑コマンド"
+    }
+    command: "- `{%NAMECHAIN%} {0}`: {1}"
+}

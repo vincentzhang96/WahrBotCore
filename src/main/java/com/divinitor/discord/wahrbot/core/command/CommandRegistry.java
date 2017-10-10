@@ -74,6 +74,13 @@ public interface CommandRegistry extends Command {
     boolean hasCommand(String commandKey);
 
     /**
+     * Get a child command registry at the given name key.
+     * @param registryNameKey
+     * @return
+     */
+    CommandRegistry getChild(String registryNameKey);
+
+    /**
      * Gets the command registry invocation chain required, e.g. ".dn tracker blessbuff", that this registry is at.
      * This can be considered this registry's command "path."
      * @param context The command invocation context.
