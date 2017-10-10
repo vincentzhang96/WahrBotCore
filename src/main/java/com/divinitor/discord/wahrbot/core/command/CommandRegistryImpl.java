@@ -243,11 +243,37 @@ public class CommandRegistryImpl implements CommandRegistry {
 
             } else {
                 //  Bulk
+                Map<String, Object> nlcParams = context.getNamedLocalizationContextParams();
                 builder.setTitle(loc.localizeToLocale(
                     CommandDispatch.getRootLocaleKey() + "help.title",
                     l,
-                    getCommandNameChain(context)));
+                    nlcParams));
 
+                String descKey = nameKey + ".desc";
+                if (loc.contains(descKey)) {
+                    builder.setDescription(loc.localizeToLocale(
+                        descKey,
+                        l,
+                        nlcParams));
+                } else {
+                    builder.setDescription(loc.localizeToLocale(
+                        CommandDispatch.getRootLocaleKey() + "help.desc",
+                        l,
+                        nlcParams));
+                }
+
+                String footerKey = nameKey + ".footer";
+                if (loc.contains(footerKey)) {
+                    builder.setFooter(loc.localizeToLocale(
+                        footerKey,
+                        l,
+                        nlcParams), null);
+                } else {
+                    builder.setFooter(loc.localizeToLocale(
+                        CommandDispatch.getRootLocaleKey() + "help.footer",
+                        l,
+                        nlcParams), null);
+                }
             }
 
             context.getFeedbackChannel().sendMessage(builder.build())

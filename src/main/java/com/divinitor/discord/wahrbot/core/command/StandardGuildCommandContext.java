@@ -9,7 +9,8 @@ import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
 
-import java.util.Locale;
+import java.util.*;
+import java.util.function.Supplier;
 
 @Getter
 public class StandardGuildCommandContext implements CommandContext {
@@ -90,5 +91,24 @@ public class StandardGuildCommandContext implements CommandContext {
     public Locale getLocale() {
         //  TODO
         return this.bot.getLocalizer().getDefaultLocale();
+    }
+
+    @Override
+    public Map<String, Object> getNamedLocalizationContextParams() {
+        Map<String, Object> ret = new HashMap<>();
+        ret.put("NAMECHAIN", wrap(() -> this.getRegistry().getCommandNameChain(this)));
+        ret.put("USER.NAME", wrap(this.getInvoker()::getName));
+        ret.put("USER.DISCRIM", wrap(this.getInvoker()::getDiscriminator));
+        ret.put("USER.ID", wrap(this.getInvoker()::getId));
+        ret.put("CHANNEL.NAME", wrap(this.getFeedbackChannel()::getName));
+        ret.put("CHANNEL.ID", wrap(this.getFeedbackChannel()::getId));
+        ret.put("SERVER.NAME", wrap(this.getServer()::getName));
+        ret.put("SERVER.ID", wrap(this.getServer()::getId));
+        ret.put("MESSAGE.ID", wrap(this.getMessage()::getId));
+        return ret;
+    }
+
+    private static Supplier<String> wrap(Supplier<String> s) {
+        return s;
     }
 }

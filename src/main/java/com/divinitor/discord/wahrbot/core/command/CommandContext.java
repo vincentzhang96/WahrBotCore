@@ -8,6 +8,7 @@ import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.Event;
 
 import java.util.Locale;
+import java.util.Map;
 
 public interface CommandContext {
 
@@ -111,4 +112,11 @@ public interface CommandContext {
      * @return The locale to use
      */
     Locale getLocale();
+
+    /**
+     * Get the named localization params. This map contains various context-based named params and should be passed to
+     * as the last argument in localization.
+     * @return A map of named params for localization
+     */
+    Map<String, Object> getNamedLocalizationContextParams();
 }
