@@ -5,6 +5,7 @@ import com.divinitor.discord.wahrbot.core.config.dyn.DynConfigHandle;
 import com.divinitor.discord.wahrbot.core.i18n.ResourceBundleBundle;
 import com.google.common.eventbus.Subscribe;
 import net.dv8tion.jda.core.entities.ISnowflake;
+import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.priv.PrivateMessageReceivedEvent;
 
@@ -36,6 +37,10 @@ public class CommandDispatch {
 
     @Subscribe
     public void handlePrivateMessage(PrivateMessageReceivedEvent event) {
+        if (shouldIgnore(event.getAuthor())) {
+            return;
+        }
+
         CommandLine cmdline = new CommandLine(event.getMessage().getRawContent());
         cmdline.takeOptionalPrefix(this.defaultCommandPrefixHandle.get());
         //  TODO
@@ -46,6 +51,10 @@ public class CommandDispatch {
 
     @Subscribe
     public void handleServerMessage(GuildMessageReceivedEvent event) {
+        if (shouldIgnore(event.getAuthor())) {
+            return;
+        }
+
         CommandLine cmdline = new CommandLine(event.getMessage().getRawContent());
         if (!cmdline.hasPrefixAndTake(this.getPrefixForServer(event.getGuild()))) {
             return;
@@ -57,6 +66,15 @@ public class CommandDispatch {
             this.rootRegistry);
 
         this.rootRegistry.invoke(context);
+    }
+
+    private boolean shouldIgnore(User author) {
+        //  Bots and other undesirables get ignored here
+        //  TODO user blacklist
+        if (author.isBot()) {
+            return true;
+        }
+        return false;
     }
 
     public String getPrefixForServer(ISnowflake guildId) {
