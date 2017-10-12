@@ -11,13 +11,14 @@ import java.util.Objects;
 public class CommandLine {
 
     private String line;
+    private final String original;
 
     /**
      * Constructs a new CommandLine instance with the given input.
      * @param line The input to parse
      */
     public CommandLine(String line) {
-        this.line = Objects.requireNonNull(line);
+        this.line = this.original = Objects.requireNonNull(line);
     }
 
     /**

@@ -11,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 import static com.divinitor.discord.wahrbot.core.util.concurrent.Lockable.acquire;
 
@@ -52,22 +53,22 @@ public class CommandRegistryImpl implements CommandRegistry {
 
         if (command != null) {
             if (!hasPermissionFor(command, context)) {
-                return CommandResult.NO_PERM;
+                return CommandResult.noPerm();
             }
 
             Command cmd = command.getCommand();
             if (!cmd.getBotPermissionConstraints().check(context)) {
-                return CommandResult.NO_BOT_PERM;
+                return CommandResult.noBotPerm();
             }
 
             if (!cmd.getOtherConstraints().check(context)) {
-                return CommandResult.ERROR;
+                return CommandResult.rejected();
             }
 
             return cmd.invoke(context);
         }
 
-        return CommandResult.NO_SUCH_COMMAND;
+        return CommandResult.noSuchCommand();
     }
 
     @Override
@@ -228,6 +229,34 @@ public class CommandRegistryImpl implements CommandRegistry {
             this.key = key;
             this.command = command;
         }
+
+        public String localizeKey(CommandContext context) {
+            return context.getLocalizer().localizeToLocale(this.key, context.getLocale());
+        }
+
+        public String helpKey() {
+            return this.key + ".help";
+        }
+
+        public String descKey() {
+            return this.key + ".help.desc";
+        }
+
+        public String syntaxListKey() {
+            return this.key + ".help.syntax.list";
+        }
+
+        public String syntaxParamsKey() {
+            return this.key + ".help.syntax.params";
+        }
+
+        public String exampleKey() {
+            return this.key + ".help.examples";
+        }
+
+        public String remarksKey() {
+            return this.key + ".help.remarks";
+        }
     }
 
     class HelpCommand implements Command {
@@ -237,10 +266,19 @@ public class CommandRegistryImpl implements CommandRegistry {
             Locale l = context.getLocale();
             EmbedBuilder builder = new EmbedBuilder();
 
-            if (context.getCommandLine().hasNext()) {
+            CommandLine cl = context.getCommandLine();
+            if (cl.hasNext()) {
                 //  Subcommand
+                String command = cl.next();
+                CommandWrapper wrap = CommandRegistryImpl.this.getCommandWrapper(command, context.getLocale());
+                if (wrap == null) {
+                    builder.setDescription(loc.localizeToLocale(
+                        "com.divinitor.discord.wahrbot.cmd.help.command.notfound",
+                        l
+                    ));
+                } else {
 
-
+                }
             } else {
                 //  Bulk
                 Map<String, Object> nlcParams = context.getNamedLocalizationContextParams();
@@ -249,6 +287,7 @@ public class CommandRegistryImpl implements CommandRegistry {
                     l,
                     nlcParams));
 
+                //  DESCRIPTION
                 String descKey = nameKey + ".desc";
                 if (loc.contains(descKey)) {
                     builder.setDescription(loc.localizeToLocale(
@@ -262,6 +301,7 @@ public class CommandRegistryImpl implements CommandRegistry {
                         nlcParams));
                 }
 
+                //  FOOTER
                 String footerKey = nameKey + ".footer";
                 if (loc.contains(footerKey)) {
                     builder.setFooter(loc.localizeToLocale(
@@ -274,12 +314,37 @@ public class CommandRegistryImpl implements CommandRegistry {
                         l,
                         nlcParams), null);
                 }
+
+                //  COMMANDS
+                //  TODO categories (for now just bulk)
+                //  Gotta sort
+                String list = CommandRegistryImpl.this.commands.values().stream()
+                    .sorted(Comparator.comparing(cw -> cw.localizeKey(context)))
+                    .filter(cw -> CommandRegistryImpl.this.hasPermissionFor(cw, context))
+                    .map(cw -> loc.localizeToLocale(
+                        "com.divinitor.discord.wahrbot.cmd.help.command",
+                        l,
+                        cw.localizeKey(context),
+                        loc.localizeToLocale(cw.helpKey(), l),
+                        nlcParams))
+                    .collect(Collectors.joining("\n"));
+                if (list.isEmpty()) {
+                    list = loc.localizeToLocale("com.divinitor.discord.wahrbot.cmd.help.category.empty", l);
+                }
+
+                builder.addField(
+                    loc.localizeToLocale(
+                        "com.divinitor.discord.wahrbot.cmd.help.category.available",
+                        l),
+                    list,
+                    false
+                );
             }
 
             context.getFeedbackChannel().sendMessage(builder.build())
                 .queue();
 
-            return CommandResult.OK;
+            return CommandResult.ok();
         }
     }
 }

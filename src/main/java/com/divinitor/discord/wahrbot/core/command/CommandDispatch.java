@@ -46,7 +46,7 @@ public class CommandDispatch {
         //  TODO
         CommandContext context = null;
 
-        this.rootRegistry.invoke(context);
+//        this.rootRegistry.invoke(context);
     }
 
     @Subscribe
@@ -65,23 +65,22 @@ public class CommandDispatch {
             cmdline,
             this.rootRegistry);
 
-        CommandResult result = CommandResult.ERROR;
+        CommandResult result = CommandResult.error();
         Throwable err = null;
         try {
             result = this.rootRegistry.invoke(context);
         } catch (Exception e) {
             err = e;
         }
-        switch (result) {
+        switch (result.getType()) {
             case ERROR:
                 this.handleCommandError(context, err);
                 break;
             case NO_PERM:
-
+                this.handleNoPerms(context);
                 break;
-
             case NO_BOT_PERM:
-
+                this.handleBotNoPerms(context);
                 break;
             case NO_SUCH_COMMAND:
             case OK:

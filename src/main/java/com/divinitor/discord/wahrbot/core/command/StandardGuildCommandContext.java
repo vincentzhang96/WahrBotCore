@@ -99,6 +99,7 @@ public class StandardGuildCommandContext implements CommandContext {
     public Map<String, Object> getNamedLocalizationContextParams() {
         Map<String, Object> ret = new HashMap<>();
         ret.put("NAMECHAIN", wrap(() -> this.getRegistry().getCommandNameChain(this)));
+        ret.put("COMMANDLINE", wrap(this.getCommandLine()::getOriginal));
         ret.put("USER.NAME", wrap(this.getInvoker()::getName));
         ret.put("USER.DISCRIM", wrap(this.getInvoker()::getDiscriminator));
         ret.put("USER.ID", wrap(this.getInvoker()::getId));

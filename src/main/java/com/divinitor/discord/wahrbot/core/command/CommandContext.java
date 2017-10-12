@@ -1,6 +1,7 @@
 package com.divinitor.discord.wahrbot.core.command;
 
 import com.divinitor.discord.wahrbot.core.WahrBot;
+import com.divinitor.discord.wahrbot.core.i18n.Localizer;
 import com.divinitor.discord.wahrbot.core.store.ServerStorage;
 import com.divinitor.discord.wahrbot.core.store.UserStorage;
 import net.dv8tion.jda.core.JDA;
@@ -126,4 +127,12 @@ public interface CommandContext {
      * @return The UUID for this context
      */
     UUID contextUuid();
+
+    /**
+     * Convenience access to the bot localizer instance.
+     * @return The bot localizer instance
+     */
+    default Localizer getLocalizer() {
+        return this.getBot().getLocalizer();
+    }
 }
