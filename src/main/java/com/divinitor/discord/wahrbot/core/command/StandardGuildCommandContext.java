@@ -19,6 +19,7 @@ public class StandardGuildCommandContext implements CommandContext {
     private final GuildMessageReceivedEvent event;
     private final CommandLine commandLine;
     private final CommandRegistry registry;
+    private final UUID uuid;
 
     public StandardGuildCommandContext(WahrBot bot,
                                        GuildMessageReceivedEvent event,
@@ -28,6 +29,7 @@ public class StandardGuildCommandContext implements CommandContext {
         this.event = event;
         this.commandLine = commandLine;
         this.registry = registry;
+        this.uuid = UUID.randomUUID();
     }
 
     @Override
@@ -105,7 +107,13 @@ public class StandardGuildCommandContext implements CommandContext {
         ret.put("SERVER.NAME", wrap(this.getServer()::getName));
         ret.put("SERVER.ID", wrap(this.getServer()::getId));
         ret.put("MESSAGE.ID", wrap(this.getMessage()::getId));
+        ret.put("UUID", wrap(this.getUuid()::toString));
         return ret;
+    }
+
+    @Override
+    public UUID contextUuid() {
+        return this.uuid;
     }
 
     private static Supplier<String> wrap(Supplier<String> s) {

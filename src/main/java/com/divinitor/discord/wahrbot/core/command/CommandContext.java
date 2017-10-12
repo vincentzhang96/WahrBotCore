@@ -9,6 +9,7 @@ import net.dv8tion.jda.core.events.Event;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
 public interface CommandContext {
 
@@ -119,4 +120,10 @@ public interface CommandContext {
      * @return A map of named params for localization
      */
     Map<String, Object> getNamedLocalizationContextParams();
+
+    /**
+     * Get the UUID associated with this context invocation.
+     * @return The UUID for this context
+     */
+    UUID contextUuid();
 }

@@ -65,7 +65,42 @@ public class CommandDispatch {
             cmdline,
             this.rootRegistry);
 
-        this.rootRegistry.invoke(context);
+        CommandResult result = CommandResult.ERROR;
+        Throwable err = null;
+        try {
+            result = this.rootRegistry.invoke(context);
+        } catch (Exception e) {
+            err = e;
+        }
+        switch (result) {
+            case ERROR:
+                this.handleCommandError(context, err);
+                break;
+            case NO_PERM:
+
+                break;
+
+            case NO_BOT_PERM:
+
+                break;
+            case NO_SUCH_COMMAND:
+            case OK:
+            case HANDLED:
+                //  Ignored
+                break;
+        }
+    }
+
+    private void handleCommandError(CommandContext context, Throwable throwable) {
+
+    }
+
+    private void handleNoPerms(CommandContext context) {
+
+    }
+
+    private void handleBotNoPerms(CommandContext context) {
+
     }
 
     private boolean shouldIgnore(User author) {
