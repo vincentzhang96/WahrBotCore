@@ -210,6 +210,24 @@ public class CommandRegistryImpl implements CommandRegistry {
     }
 
     @Override
+    public CommandRegistry makeRegistries(String... keys) {
+        if (keys.length == 0) {
+            return this;
+        }
+
+        String first = keys[0];
+        CommandRegistry sub = this.getChild(first);
+        if (sub == null) {
+            sub = new CommandRegistryImpl(first, this);
+            this.registerCommand(sub, first);
+        }
+
+        String[] reduced = new String[keys.length - 1];
+        System.arraycopy(keys, 1, reduced, 0, reduced.length);
+        return sub.makeRegistries(reduced);
+    }
+
+    @Override
     public CommandConstraint<CommandContext> getUserPermissionConstraints() {
         return this.userPermissionConstraints;
     }

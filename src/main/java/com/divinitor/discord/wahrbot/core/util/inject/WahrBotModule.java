@@ -1,8 +1,10 @@
 package com.divinitor.discord.wahrbot.core.util.inject;
 
 import com.divinitor.discord.wahrbot.core.WahrBot;
+import com.divinitor.discord.wahrbot.core.command.CommandDispatcher;
 import com.divinitor.discord.wahrbot.core.config.BotConfig;
 import com.divinitor.discord.wahrbot.core.config.dyn.DynConfigStore;
+import com.divinitor.discord.wahrbot.core.i18n.Localizer;
 import com.divinitor.discord.wahrbot.core.module.ModuleManager;
 import com.divinitor.discord.wahrbot.core.service.ServiceBus;
 import com.divinitor.discord.wahrbot.core.util.SQLConnectionProvider;
@@ -30,6 +32,8 @@ public class WahrBotModule extends AbstractModule {
 
         bind(ModuleManager.class).toProvider(this.bot::getModuleManager);
         bind(DynConfigStore.class).toProvider(this.bot::getDynConfigStore);
+        bind(Localizer.class).toProvider(this.bot::getLocalizer);
+        bind(CommandDispatcher.class).toProvider(this.bot::getCommandDispatcher);
         bind(ServiceBus.class).toProvider(this.bot::getServiceBus);
     }
 

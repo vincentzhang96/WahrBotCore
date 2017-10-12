@@ -87,4 +87,16 @@ public interface CommandRegistry extends Command {
      * @return This registry's invocation chain.
      */
     String getCommandNameChain(CommandContext context);
+
+    /**
+     * Creates child registries according to the given keys as a path. If a child registry exists, it is not
+     * overwritten.
+     *
+     * For example, calling makeRegistries("foo", "bar", "baz") will create the registry chain "foo bar baz" under this
+     * registry (assuming that foo, bar, and baz resolve to their names in the localization) and return the baz registry
+     *
+     * @param keys A list of keys, forming the registry path
+     * @return The bottommost registry
+     */
+    CommandRegistry makeRegistries(String... keys);
 }
