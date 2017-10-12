@@ -4,12 +4,14 @@ import com.divinitor.discord.wahrbot.core.WahrBot;
 import com.divinitor.discord.wahrbot.core.config.dyn.DynConfigHandle;
 import com.divinitor.discord.wahrbot.core.i18n.ResourceBundleBundle;
 import com.google.common.eventbus.Subscribe;
+import lombok.Getter;
+import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.ISnowflake;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.priv.PrivateMessageReceivedEvent;
 
-public class CommandDispatch {
+public class CommandDispatcherImpl implements CommandDispatcher {
 
     public static final String DEFAULT_COMMAND_PREFIX_KEY = "com.divinitor.discord.wahrbot.core.command.prefix.default";
 
@@ -20,11 +22,13 @@ public class CommandDispatch {
     }
 
     private WahrBot bot;
+
+    @Getter
     private final CommandRegistry rootRegistry;
 
     private final DynConfigHandle defaultCommandPrefixHandle;
 
-    public CommandDispatch(WahrBot bot) {
+    public CommandDispatcherImpl(WahrBot bot) {
         this.bot = bot;
         this.rootRegistry = new RootCommandRegistry(getRootLocaleKey() + "root");
         this.defaultCommandPrefixHandle = bot.getDynConfigStore().getStringHandle(DEFAULT_COMMAND_PREFIX_KEY);
@@ -35,6 +39,7 @@ public class CommandDispatch {
             new ResourceBundleBundle("com.divinitor.discord.wahrbot.core.command.locale"));
     }
 
+    @Override
     @Subscribe
     public void handlePrivateMessage(PrivateMessageReceivedEvent event) {
         if (shouldIgnore(event.getAuthor())) {
@@ -49,6 +54,7 @@ public class CommandDispatch {
 //        this.rootRegistry.invoke(context);
     }
 
+    @Override
     @Subscribe
     public void handleServerMessage(GuildMessageReceivedEvent event) {
         if (shouldIgnore(event.getAuthor())) {
@@ -91,15 +97,34 @@ public class CommandDispatch {
     }
 
     private void handleCommandError(CommandContext context, Throwable throwable) {
-
+        //  TODO
+        context.getFeedbackChannel().sendMessage(new MessageBuilder()
+            .append("PLACEHOLDER Command execution error")
+            .appendCodeBlock(throwable.toString(), null)
+            .append("UUID ")
+            .append(context.contextUuid())
+            .build())
+            .queue();
     }
 
     private void handleNoPerms(CommandContext context) {
-
+        //  TODO
+        context.getFeedbackChannel().sendMessage(new MessageBuilder()
+            .append("PLACEHOLDER You don't have permission for this")
+            .append("UUID ")
+            .append(context.contextUuid())
+            .build())
+            .queue();
     }
 
     private void handleBotNoPerms(CommandContext context) {
-
+        //  TODO
+        context.getFeedbackChannel().sendMessage(new MessageBuilder()
+            .append("PLACEHOLDER Bot doesn't have permission for this")
+            .append("UUID ")
+            .append(context.contextUuid())
+            .build())
+            .queue();
     }
 
     private boolean shouldIgnore(User author) {
@@ -125,7 +150,7 @@ public class CommandDispatch {
 
         @Override
         public String getCommandNameChain(CommandContext context) {
-            return CommandDispatch.this.getPrefixForServer(context.getServer());
+            return CommandDispatcherImpl.this.getPrefixForServer(context.getServer());
         }
     }
 }

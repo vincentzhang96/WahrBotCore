@@ -3,6 +3,8 @@ package com.divinitor.discord.wahrbot.core;
 import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Reporter;
+import com.divinitor.discord.wahrbot.core.command.CommandDispatcher;
+import com.divinitor.discord.wahrbot.core.command.CommandDispatcherImpl;
 import com.divinitor.discord.wahrbot.core.config.BotConfig;
 import com.divinitor.discord.wahrbot.core.config.RedisCredentials;
 import com.divinitor.discord.wahrbot.core.config.SQLCredentials;
@@ -109,6 +111,9 @@ public class WahrBotImpl implements WahrBot {
     @Getter
     private Localizer localizer;
 
+    @Getter
+    private CommandDispatcher commandDispatcher;
+
     public WahrBotImpl() {
         this.botDir = Paths.get(
                 System.getProperty("com.divinitor.discord.wahrbot.home", ""))
@@ -208,6 +213,10 @@ public class WahrBotImpl implements WahrBot {
         this.injector.injectMembers(rdcs);
         this.dynConfigStore = new CachingDynConfigStore(rdcs);
         this.serviceBus.registerService(DynConfigStore.class, this.dynConfigStore);
+
+        this.commandDispatcher = new CommandDispatcherImpl(this);
+        this.injector.injectMembers(this.commandDispatcher);
+        this.serviceBus.registerService(CommandDispatcher.class, this.commandDispatcher);
     }
 
     private void loadModules() {

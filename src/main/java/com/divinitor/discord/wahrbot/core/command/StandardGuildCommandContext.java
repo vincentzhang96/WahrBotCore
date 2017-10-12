@@ -32,6 +32,13 @@ public class StandardGuildCommandContext implements CommandContext {
         this.uuid = UUID.randomUUID();
     }
 
+    public StandardGuildCommandContext(CommandContext context, CommandRegistry newRegistry) {
+        this(context.getBot(),
+            (GuildMessageReceivedEvent) context.getEvent(),
+            context.getCommandLine(),
+            newRegistry);
+    }
+
     @Override
     public JDA getApi() {
         return bot.getApiClient();

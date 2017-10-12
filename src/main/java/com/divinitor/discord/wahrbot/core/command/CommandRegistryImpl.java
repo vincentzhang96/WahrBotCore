@@ -49,6 +49,8 @@ public class CommandRegistryImpl implements CommandRegistry {
 
     @Override
     public CommandResult invoke(CommandContext context) {
+        context = new StandardGuildCommandContext(context, this);
+
         CommandWrapper command = this.getWrapperFor(context.getCommandLine(), context);
 
         if (command != null) {
@@ -181,7 +183,10 @@ public class CommandRegistryImpl implements CommandRegistry {
 
     @Override
     public CommandRegistry getChild(String registryNameKey) {
-        CommandWrapper wrapper = this.commands.get(registryNameKey);
+        CommandWrapper wrapper;
+        try (Lockable l = acquire(this.commandLock.readLock())) {
+            wrapper = this.commands.get(registryNameKey);
+        }
         if (wrapper == null) {
             return null;
         }
@@ -265,6 +270,7 @@ public class CommandRegistryImpl implements CommandRegistry {
         public CommandResult invoke(CommandContext context) {
             Locale l = context.getLocale();
             EmbedBuilder builder = new EmbedBuilder();
+            Map<String, Object> nlcParams = context.getNamedLocalizationContextParams();
 
             CommandLine cl = context.getCommandLine();
             if (cl.hasNext()) {
@@ -274,16 +280,16 @@ public class CommandRegistryImpl implements CommandRegistry {
                 if (wrap == null) {
                     builder.setDescription(loc.localizeToLocale(
                         "com.divinitor.discord.wahrbot.cmd.help.command.notfound",
-                        l
+                        l,
+                        nlcParams
                     ));
                 } else {
 
                 }
             } else {
                 //  Bulk
-                Map<String, Object> nlcParams = context.getNamedLocalizationContextParams();
                 builder.setTitle(loc.localizeToLocale(
-                    CommandDispatch.getRootLocaleKey() + "help.title",
+                    CommandDispatcherImpl.getRootLocaleKey() + "help.title",
                     l,
                     nlcParams));
 
@@ -296,7 +302,7 @@ public class CommandRegistryImpl implements CommandRegistry {
                         nlcParams));
                 } else {
                     builder.setDescription(loc.localizeToLocale(
-                        CommandDispatch.getRootLocaleKey() + "help.desc",
+                        CommandDispatcherImpl.getRootLocaleKey() + "help.desc",
                         l,
                         nlcParams));
                 }
@@ -310,7 +316,7 @@ public class CommandRegistryImpl implements CommandRegistry {
                         nlcParams), null);
                 } else {
                     builder.setFooter(loc.localizeToLocale(
-                        CommandDispatch.getRootLocaleKey() + "help.footer",
+                        CommandDispatcherImpl.getRootLocaleKey() + "help.footer",
                         l,
                         nlcParams), null);
                 }
@@ -318,16 +324,21 @@ public class CommandRegistryImpl implements CommandRegistry {
                 //  COMMANDS
                 //  TODO categories (for now just bulk)
                 //  Gotta sort
-                String list = CommandRegistryImpl.this.commands.values().stream()
-                    .sorted(Comparator.comparing(cw -> cw.localizeKey(context)))
-                    .filter(cw -> CommandRegistryImpl.this.hasPermissionFor(cw, context))
-                    .map(cw -> loc.localizeToLocale(
-                        "com.divinitor.discord.wahrbot.cmd.help.command",
-                        l,
-                        cw.localizeKey(context),
-                        loc.localizeToLocale(cw.helpKey(), l),
-                        nlcParams))
-                    .collect(Collectors.joining("\n"));
+
+                String list;
+                try (Lockable lock = acquire(CommandRegistryImpl.this.commandLock.readLock())) {
+                    list = CommandRegistryImpl.this.commands.values().stream()
+                        .sorted(Comparator.comparing(cw -> cw.localizeKey(context)))
+                        .filter(cw -> CommandRegistryImpl.this.hasPermissionFor(cw, context))
+                        .map(cw -> loc.localizeToLocale(
+                            "com.divinitor.discord.wahrbot.cmd.help.command",
+                            l,
+                            cw.localizeKey(context),
+                            loc.localizeToLocale(cw.helpKey(), l),
+                            nlcParams))
+                        .collect(Collectors.joining("\n"));
+                }
+
                 if (list.isEmpty()) {
                     list = loc.localizeToLocale("com.divinitor.discord.wahrbot.cmd.help.category.empty", l);
                 }
