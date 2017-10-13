@@ -1,13 +1,12 @@
 package com.divinitor.discord.wahrbot.core.util.discord;
 
-import net.dv8tion.jda.core.entities.ISnowflake;
-
 public class SnowflakeUtils {
 
     public static final long DISCORD_EPOCH_MS = 1420070400000L;
 
     public static final String CODEX = "0123456789ABCDEFGH_JKLMN=PQRSTUVWXYZabcdefghijk-mnopqrstuvwxyz";
     public static final int BASE = CODEX.length();
+    public static final String PREFIX = "$";
 
     private SnowflakeUtils() {
     }
@@ -51,7 +50,7 @@ public class SnowflakeUtils {
         }
 
         //  Format
-        ret = "$" + ret;
+        ret = PREFIX + ret;
 
         return ret;
     }

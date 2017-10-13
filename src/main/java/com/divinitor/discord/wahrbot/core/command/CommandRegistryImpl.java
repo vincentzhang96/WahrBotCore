@@ -7,8 +7,14 @@ import lombok.Getter;
 import lombok.Setter;
 import net.dv8tion.jda.core.EmbedBuilder;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.lang.invoke.MethodHandles;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
@@ -17,10 +23,12 @@ import static com.divinitor.discord.wahrbot.core.util.concurrent.Lockable.acquir
 
 public class CommandRegistryImpl implements CommandRegistry {
 
+    private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private final Map<String, CommandWrapper> commands;
     private final ReadWriteLock commandLock;
-    private CommandRegistry parent;
     private final String nameKey;
+    private CommandRegistry parent;
     private Command defaultCommand;
     @Setter
     private CommandConstraint<CommandContext> userPermissionConstraints;
@@ -53,6 +61,9 @@ public class CommandRegistryImpl implements CommandRegistry {
 
         CommandWrapper command = this.getWrapperFor(context.getCommandLine(), context);
 
+        //  Consume next token cuz getWrapperFor uses peek
+        context.getCommandLine().next();
+
         if (command != null) {
             if (!hasPermissionFor(command, context)) {
                 return CommandResult.noPerm();
@@ -74,6 +85,11 @@ public class CommandRegistryImpl implements CommandRegistry {
     }
 
     @Override
+    public CommandRegistry getParent() {
+        return this.parent;
+    }
+
+    @Override
     public void setParent(CommandRegistry parent) throws IllegalArgumentException {
         //  Verify we don't have any cycles
         CommandRegistry pp = parent;
@@ -87,11 +103,6 @@ public class CommandRegistryImpl implements CommandRegistry {
         }
 
         this.parent = parent;
-    }
-
-    @Override
-    public CommandRegistry getParent() {
-        return this.parent;
     }
 
     @Override
@@ -164,13 +175,21 @@ public class CommandRegistryImpl implements CommandRegistry {
         CommandWrapper wrapper = new CommandWrapper(commandKey, command);
         try (Lockable l = acquire(this.commandLock.writeLock())) {
             this.commands.put(commandKey, wrapper);
+            LOGGER.info("Registered command {} under {}", loc.localize(commandKey), loc.localize(this.nameKey));
         }
     }
 
     @Override
     public void unregisterCommand(String commandKey) {
         try (Lockable l = acquire(this.commandLock.writeLock())) {
-            this.commands.remove(commandKey);
+            boolean removed = this.commands.remove(commandKey) != null;
+            if (removed) {
+                LOGGER.info("Unregistered command {} under {}",
+                    loc.localize(commandKey), loc.localize(this.nameKey));
+            } else {
+                LOGGER.warn("Attempted to unregister nonexistant command {} under {}",
+                    loc.localize(commandKey), loc.localize(this.nameKey));
+            }
         }
     }
 
@@ -201,9 +220,10 @@ public class CommandRegistryImpl implements CommandRegistry {
 
     @Override
     public String getCommandNameChain(CommandContext context) {
+        Locale locale = context.getLocale();
         if (this.parent != null) {
             return this.parent.getCommandNameChain(context)
-                + " " + this.loc.localizeToLocale(this.nameKey, context.getLocale());
+                + " " + this.loc.localizeToLocale(this.nameKey, locale);
         } else {
             return "";
         }

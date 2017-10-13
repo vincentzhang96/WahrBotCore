@@ -216,6 +216,7 @@ public class WahrBotImpl implements WahrBot {
 
         this.commandDispatcher = new CommandDispatcherImpl(this);
         this.injector.injectMembers(this.commandDispatcher);
+        this.eventBus.register(this.commandDispatcher);
         this.serviceBus.registerService(CommandDispatcher.class, this.commandDispatcher);
     }
 

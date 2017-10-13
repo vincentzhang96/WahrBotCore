@@ -5,6 +5,8 @@ import com.divinitor.discord.wahrbot.core.util.concurrent.Lockable;
 import com.divinitor.discord.wahrbot.core.util.gson.StandardGson;
 import com.github.zafarkhaja.semver.Version;
 import com.google.gson.reflect.TypeToken;
+import com.google.inject.Injector;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -191,7 +193,7 @@ public class ModuleManagerImpl implements ModuleManager {
                     info.getMainClass());
             }
 
-            ModuleHandleImpl handle = new ModuleHandleImpl(module, loader, info);
+            ModuleHandleImpl handle = new ModuleHandleImpl(module, loader, info, bot.getInjector());
             this.loadedModules.put(moduleId, handle);
 
             try {
@@ -381,16 +383,19 @@ public class ModuleManagerImpl implements ModuleManager {
         }
     }
 
+    @Getter
     static class ModuleHandleImpl implements ModuleHandle, ModuleContext {
 
         private final Module module;
         private final ModuleClassLoader classLoader;
         private final ModuleInformation moduleInfo;
+        private Injector injector;
 
-        ModuleHandleImpl(Module module, ModuleClassLoader classLoader, ModuleInformation moduleInfo) {
+        ModuleHandleImpl(Module module, ModuleClassLoader classLoader, ModuleInformation moduleInfo, Injector injector) {
             this.module = module;
             this.classLoader = classLoader;
             this.moduleInfo = moduleInfo;
+            this.injector = injector;
         }
 
         @Override
@@ -401,6 +406,11 @@ public class ModuleManagerImpl implements ModuleManager {
         @Override
         public ModuleInformation getModuleInfo() {
             return this.moduleInfo;
+        }
+
+        @Override
+        public Injector getInjector() {
+            return injector;
         }
     }
 

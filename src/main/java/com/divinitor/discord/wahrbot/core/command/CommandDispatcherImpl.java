@@ -10,8 +10,14 @@ import net.dv8tion.jda.core.entities.ISnowflake;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.priv.PrivateMessageReceivedEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.invoke.MethodHandles;
 
 public class CommandDispatcherImpl implements CommandDispatcher {
+
+    private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public static final String DEFAULT_COMMAND_PREFIX_KEY = "com.divinitor.discord.wahrbot.core.command.prefix.default";
 
@@ -31,6 +37,7 @@ public class CommandDispatcherImpl implements CommandDispatcher {
     public CommandDispatcherImpl(WahrBot bot) {
         this.bot = bot;
         this.rootRegistry = new RootCommandRegistry(getRootLocaleKey() + "root");
+        this.bot.getInjector().injectMembers(this.rootRegistry);
         this.defaultCommandPrefixHandle = bot.getDynConfigStore().getStringHandle(DEFAULT_COMMAND_PREFIX_KEY);
 
         //  Load command localization strings
@@ -66,10 +73,14 @@ public class CommandDispatcherImpl implements CommandDispatcher {
             return;
         }
 
+
         StandardGuildCommandContext context = new StandardGuildCommandContext(this.bot,
             event,
             cmdline,
             this.rootRegistry);
+
+        LOGGER.debug("Incoming command {} in {}#{} from {}",
+            cmdline.getLine(), context.getServer(), context.getInvocationChannel(), context.getMember());
 
         CommandResult result = CommandResult.error();
         Throwable err = null;

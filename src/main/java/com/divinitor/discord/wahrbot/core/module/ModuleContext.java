@@ -1,8 +1,10 @@
 package com.divinitor.discord.wahrbot.core.module;
 
-import com.divinitor.discord.wahrbot.core.WahrBot;
+import com.google.inject.Injector;
 
 public interface ModuleContext {
 
     ModuleInformation getModuleInfo();
+
+    Injector getInjector();
 }
