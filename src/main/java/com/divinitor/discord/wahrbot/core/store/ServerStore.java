@@ -18,4 +18,6 @@ public interface ServerStore extends DynConfigStore {
      * @return A {@link MemberStore} for the user
      */
     MemberStore forMember(Member member);
+
+    void purge();
 }
