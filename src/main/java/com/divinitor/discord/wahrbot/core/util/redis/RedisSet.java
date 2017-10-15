@@ -24,6 +24,11 @@ public class RedisSet<V> implements Set<V> {
         this.stringType = this.vClass == String.class;
     }
 
+    public RedisSet(JedisProvider pool, String base, Gson gson, Class<V> vClass, Collection<V> c) {
+        this(pool, base, gson, vClass);
+        this.addAll(c);
+    }
+
     @Override
     public int size() {
         try (Jedis j = this.pool.getResource()) {
