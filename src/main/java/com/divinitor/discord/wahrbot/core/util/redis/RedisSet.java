@@ -96,47 +96,93 @@ public class RedisSet<V> implements Set<V> {
     @NotNull
     @Override
     public Object[] toArray() {
-        return new Object[0];
+        List<V> vals = new ArrayList<>();
+        vals.addAll(this);
+        return vals.toArray();
     }
 
     @NotNull
     @Override
     public <T1> T1[] toArray(@NotNull T1[] a) {
-        return null;
+        List<V> vals = new ArrayList<>();
+        vals.addAll(this);
+        return vals.toArray(a);
     }
 
     @Override
     public boolean add(V v) {
-        return false;
+        try (Jedis j = this.pool.getResource()) {
+            String val;
+            if (this.stringType) {
+                val = (String) v;
+            } else {
+                val = this.gson.toJson(v);
+            }
+
+            return j.sadd(this.base, val) > 0;
+        }
     }
 
     @Override
     public boolean remove(Object o) {
-        return false;
+        if (!this.vClass.isInstance(o)) {
+            return false;
+        }
+
+        try (Jedis j = this.pool.getResource()) {
+            String val;
+            if (this.stringType) {
+                val = (String) o;
+            } else {
+                val = this.gson.toJson(o);
+            }
+
+            return j.srem(this.base, val) > 0;
+        }
     }
 
     @Override
     public boolean containsAll(@NotNull Collection<?> c) {
-        return false;
+        boolean has = true;
+
+        for (Object o : c) {
+            has &= this.contains(o);
+        }
+
+        return has;
     }
 
     @Override
     public boolean addAll(@NotNull Collection<? extends V> c) {
-        return false;
+        boolean added = false;
+
+        for (V v : c) {
+            added |= this.add(v);
+        }
+
+        return added;
     }
 
     @Override
     public boolean retainAll(@NotNull Collection<?> c) {
-        return false;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public boolean removeAll(@NotNull Collection<?> c) {
-        return false;
+        boolean removed = false;
+
+        for (Object o : c) {
+            removed |= this.remove(o);
+        }
+
+        return removed;
     }
 
     @Override
     public void clear() {
-
+        try (Jedis j = this.pool.getResource()) {
+            j.del(this.base);
+        }
     }
 }
