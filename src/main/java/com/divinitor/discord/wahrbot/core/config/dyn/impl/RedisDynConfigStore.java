@@ -1,9 +1,9 @@
 package com.divinitor.discord.wahrbot.core.config.dyn.impl;
 
-import com.divinitor.discord.wahrbot.core.config.dyn.*;
+import com.divinitor.discord.wahrbot.core.config.dyn.DynConfigStore;
+import com.divinitor.discord.wahrbot.core.util.gson.StandardGson;
 import com.divinitor.discord.wahrbot.core.util.inject.JedisProvider;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
 import redis.clients.jedis.Jedis;
 
@@ -18,7 +18,7 @@ public class RedisDynConfigStore implements DynConfigStore {
     private final Gson gson;
 
     public RedisDynConfigStore() {
-        this.gson = new GsonBuilder().create();
+        this.gson = StandardGson.instance();
     }
 
     @Override

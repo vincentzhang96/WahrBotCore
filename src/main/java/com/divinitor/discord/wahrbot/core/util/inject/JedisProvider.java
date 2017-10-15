@@ -15,4 +15,8 @@ public class JedisProvider {
     public Jedis get() {
         return this.supplier.get();
     }
+
+    public Jedis getResource() {
+        return this.get();
+    }
 }

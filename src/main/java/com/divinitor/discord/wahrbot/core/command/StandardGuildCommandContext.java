@@ -1,25 +1,36 @@
 package com.divinitor.discord.wahrbot.core.command;
 
 import com.divinitor.discord.wahrbot.core.WahrBot;
-import com.divinitor.discord.wahrbot.core.store.ServerStorage;
-import com.divinitor.discord.wahrbot.core.store.UserStorage;
+import com.divinitor.discord.wahrbot.core.store.ServerStore;
+import com.divinitor.discord.wahrbot.core.store.UserStore;
+import com.divinitor.discord.wahrbot.core.util.discord.SnowflakeUtils;
+import com.google.common.base.Strings;
 import lombok.Getter;
+import lombok.Setter;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 @Getter
 public class StandardGuildCommandContext implements CommandContext {
+
+    public static final String USER_LOCALE_KEY = "opt.locale";
 
     private final WahrBot bot;
     private final GuildMessageReceivedEvent event;
     private final CommandLine commandLine;
     private final CommandRegistry registry;
     private final UUID uuid;
+
+    @Setter
+    private String nameKey;
 
     public StandardGuildCommandContext(WahrBot bot,
                                        GuildMessageReceivedEvent event,
@@ -37,6 +48,10 @@ public class StandardGuildCommandContext implements CommandContext {
             (GuildMessageReceivedEvent) context.getEvent(),
             context.getCommandLine(),
             newRegistry);
+    }
+
+    private static Supplier<String> wrap(Supplier<String> s) {
+        return s;
     }
 
     @Override
@@ -80,15 +95,13 @@ public class StandardGuildCommandContext implements CommandContext {
     }
 
     @Override
-    public ServerStorage getServerStorage() {
-        //  TODO
-        return null;
+    public ServerStore getServerStorage() {
+        return this.bot.getServerStorage().forServer(this.getServer());
     }
 
     @Override
-    public UserStorage getUserStorage() {
-        //  TODO
-        return null;
+    public UserStore getUserStorage() {
+        return this.bot.getUserStorage().forUser(this.getInvoker());
     }
 
     @Override
@@ -98,8 +111,12 @@ public class StandardGuildCommandContext implements CommandContext {
 
     @Override
     public Locale getLocale() {
-        //  TODO
-        return this.bot.getLocalizer().getDefaultLocale();
+        String userLocale = this.getUserStorage().getString(USER_LOCALE_KEY);
+        if (Strings.isNullOrEmpty(userLocale)) {
+            return this.bot.getLocalizer().getDefaultLocale();
+        }
+
+        return Locale.forLanguageTag(userLocale);
     }
 
     @Override
@@ -107,9 +124,12 @@ public class StandardGuildCommandContext implements CommandContext {
         Map<String, Object> ret = new HashMap<>();
         ret.put("NAMECHAIN", wrap(() -> this.getRegistry().getCommandNameChain(this)));
         ret.put("COMMANDLINE", wrap(this.getCommandLine()::getOriginal));
+        ret.put("COMMANDNAME", wrap(() -> this.getLocalizer().localizeToLocale(
+            this.getCommandNameKey(), this.getLocale())));
         ret.put("USER.NAME", wrap(this.getInvoker()::getName));
         ret.put("USER.DISCRIM", wrap(this.getInvoker()::getDiscriminator));
         ret.put("USER.ID", wrap(this.getInvoker()::getId));
+        ret.put("USER.SID", wrap(() -> SnowflakeUtils.encode(this.getInvoker().getIdLong())));
         ret.put("CHANNEL.NAME", wrap(this.getFeedbackChannel()::getName));
         ret.put("CHANNEL.ID", wrap(this.getFeedbackChannel()::getId));
         ret.put("SERVER.NAME", wrap(this.getServer()::getName));
@@ -124,7 +144,8 @@ public class StandardGuildCommandContext implements CommandContext {
         return this.uuid;
     }
 
-    private static Supplier<String> wrap(Supplier<String> s) {
-        return s;
+    @Override
+    public String getCommandNameKey() {
+        return this.nameKey;
     }
 }

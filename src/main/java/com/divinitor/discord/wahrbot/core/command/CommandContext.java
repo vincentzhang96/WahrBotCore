@@ -2,8 +2,8 @@ package com.divinitor.discord.wahrbot.core.command;
 
 import com.divinitor.discord.wahrbot.core.WahrBot;
 import com.divinitor.discord.wahrbot.core.i18n.Localizer;
-import com.divinitor.discord.wahrbot.core.store.ServerStorage;
-import com.divinitor.discord.wahrbot.core.store.UserStorage;
+import com.divinitor.discord.wahrbot.core.store.ServerStore;
+import com.divinitor.discord.wahrbot.core.store.UserStore;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.Event;
@@ -70,16 +70,16 @@ public interface CommandContext {
     Guild getServer();
 
     /**
-     * Gets the server storage associated with this server. For private messages, this is null.
-     * @return The ServerStorage associated with this server, or a null if private
+     * Gets the server store associated with this server. For private messages, this is null.
+     * @return The ServerStore associated with this server, or a null if private
      */
-    ServerStorage getServerStorage();
+    ServerStore getServerStorage();
 
     /**
-     * Gets the user storage associated with the command invoker.
-     * @return The UserStorage associated with the command invoker
+     * Gets the user store associated with the command invoker.
+     * @return The UserStore associated with the command invoker
      */
-    UserStorage getUserStorage();
+    UserStore getUserStorage();
 
     /**
      * Gets the current command line that this command is being executed on.
@@ -135,4 +135,10 @@ public interface CommandContext {
     default Localizer getLocalizer() {
         return this.getBot().getLocalizer();
     }
+
+    /**
+     * Get the name key associated with this command invocation.
+     * @return The name key for the executing command
+     */
+    String getCommandNameKey();
 }

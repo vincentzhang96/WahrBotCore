@@ -200,6 +200,12 @@
             <artifactId>java-semver</artifactId>
             <version>0.9.0</version>
         </dependency>
+        <dependency>
+            <!-- Unirest -->
+            <groupId>com.mashape.unirest</groupId>
+            <artifactId>unirest-java</artifactId>
+            <version>1.4.9</version>
+        </dependency>
 
         <!-- Logging -->
         <dependency>

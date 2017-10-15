@@ -100,6 +100,9 @@ public class ModuleManagerImpl implements ModuleManager {
             this.tryUnregister(moduleHandle.getModule());
         }
 
+        System.gc();
+        System.runFinalization();
+
         return true;
     }
 

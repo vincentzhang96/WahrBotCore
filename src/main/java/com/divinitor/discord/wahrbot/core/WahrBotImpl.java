@@ -17,6 +17,8 @@ import com.divinitor.discord.wahrbot.core.module.ModuleManager;
 import com.divinitor.discord.wahrbot.core.module.ModuleManagerImpl;
 import com.divinitor.discord.wahrbot.core.service.ServiceBus;
 import com.divinitor.discord.wahrbot.core.service.impl.ServiceBusImpl;
+import com.divinitor.discord.wahrbot.core.store.ServerStorage;
+import com.divinitor.discord.wahrbot.core.store.UserStorage;
 import com.divinitor.discord.wahrbot.core.util.inject.WahrBotModule;
 import com.divinitor.discord.wahrbot.core.util.gson.StandardGson;
 import com.divinitor.discord.wahrbot.core.util.logging.SimpleLogRedirect;
@@ -113,6 +115,12 @@ public class WahrBotImpl implements WahrBot {
 
     @Getter
     private CommandDispatcher commandDispatcher;
+
+    @Getter
+    private UserStorage userStorage;
+
+    @Getter
+    private ServerStorage serverStorage;
 
     public WahrBotImpl() {
         this.botDir = Paths.get(

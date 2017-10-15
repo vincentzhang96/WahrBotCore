@@ -19,6 +19,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
+import static com.divinitor.discord.wahrbot.core.command.CommandDispatcherImpl.getRootLocaleKey;
 import static com.divinitor.discord.wahrbot.core.util.concurrent.Lockable.acquire;
 
 public class CommandRegistryImpl implements CommandRegistry {
@@ -40,6 +41,9 @@ public class CommandRegistryImpl implements CommandRegistry {
     @Inject
     private Localizer loc;
 
+    private HelpCommand helpCommand;
+    private CommandWrapper helpCommandWrapper;
+
     public CommandRegistryImpl(String nameKey) {
         this(nameKey, null);
     }
@@ -53,11 +57,13 @@ public class CommandRegistryImpl implements CommandRegistry {
         this.userPermissionConstraints = CommandConstraints.allow();
         this.botPermissionConstraints = CommandConstraints.allow();
         this.otherConstraints = CommandConstraints.allow();
+        this.helpCommand = new HelpCommand();
+        this.helpCommandWrapper = new CommandWrapper("com.divinitor.discord.wahrbot.cmd.help", this.helpCommand);
     }
 
     @Override
-    public CommandResult invoke(CommandContext context) {
-        context = new StandardGuildCommandContext(context, this);
+    public CommandResult invoke(CommandContext ctx) {
+        StandardGuildCommandContext context = new StandardGuildCommandContext(ctx, this);
 
         CommandWrapper command = this.getWrapperFor(context.getCommandLine(), context);
 
@@ -77,6 +83,8 @@ public class CommandRegistryImpl implements CommandRegistry {
             if (!cmd.getOtherConstraints().check(context)) {
                 return CommandResult.rejected();
             }
+
+            context.setNameKey(command.getKey());
 
             return cmd.invoke(context);
         }
@@ -143,6 +151,11 @@ public class CommandRegistryImpl implements CommandRegistry {
                 }
             }
         }
+
+        if (cmd.equalsIgnoreCase(this.loc.localizeToLocale("com.divinitor.discord.wahrbot.cmd.help", locale))) {
+            return this.helpCommandWrapper;
+        }
+
         return null;
     }
 
@@ -165,7 +178,7 @@ public class CommandRegistryImpl implements CommandRegistry {
     @Override
     public void setDefaultCommand(Command command) {
         if (command == null) {
-            command = new HelpCommand();
+            command = this.helpCommand;
         }
         this.defaultCommand = command;
     }
@@ -223,7 +236,7 @@ public class CommandRegistryImpl implements CommandRegistry {
         Locale locale = context.getLocale();
         if (this.parent != null) {
             return this.parent.getCommandNameChain(context)
-                + " " + this.loc.localizeToLocale(this.nameKey, locale);
+                + " " + this.loc.localizeToLocale(this.nameKey, locale) + " ";
         } else {
             return "";
         }
@@ -317,47 +330,98 @@ public class CommandRegistryImpl implements CommandRegistry {
                 CommandWrapper wrap = CommandRegistryImpl.this.getCommandWrapper(command, context.getLocale());
                 if (wrap == null) {
                     builder.setDescription(loc.localizeToLocale(
-                        "com.divinitor.discord.wahrbot.cmd.help.command.notfound",
+                        getRootLocaleKey() + "help.command.notfound",
                         l,
                         nlcParams
                     ));
                 } else {
+                    //  TITLE
+                    builder.setTitle(loc.localizeToLocale(
+                        getRootLocaleKey() + "help.command.title",
+                        l,
+                        loc.localizeToLocale(wrap.key, l), nlcParams));
 
+                    //  DESCRIPTION
+                    builder.setDescription(loc.localizeToLocale(
+                        wrap.descKey(),
+                        l,
+                        nlcParams
+                    ));
+
+                    //  SYNTAX
+                    String syntaxBody;
+                    String syntaxList = loc.localizeToLocale(
+                        wrap.syntaxListKey(),
+                        l,
+                        nlcParams
+                    );
+                    String syntaxParams = loc.localizeToLocale(
+                        wrap.syntaxParamsKey(),
+                        l,
+                        nlcParams
+                    );
+                    syntaxBody = loc.localizeToLocale(
+                        getRootLocaleKey() + "help.command.value.syntax",
+                        l,
+                        syntaxList, syntaxParams,
+                        nlcParams
+                    );
+
+                    builder.addField(loc.localizeToLocale(
+                        getRootLocaleKey() + "help.command.heading.syntax",
+                        l,
+                        nlcParams
+                        ),
+                        syntaxBody, false);
+
+                    //  EXAMPLES
+                    if (loc.contains(wrap.exampleKey())) {
+                        builder.addField(
+                            loc.localizeToLocale(
+                                getRootLocaleKey() + "help.command.heading.examples",
+                                l,
+                                nlcParams
+                            ),
+                            loc.localizeToLocale(
+                                wrap.exampleKey(),
+                                l,
+                                nlcParams
+                            ), false);
+                    }
+
+                    //  REMARKS
+                    if (loc.contains(wrap.remarksKey())) {
+                        builder.addField(
+                            loc.localizeToLocale(
+                                getRootLocaleKey() + "help.command.heading.remarks",
+                                l,
+                                nlcParams
+                            ),
+                            loc.localizeToLocale(
+                                wrap.remarksKey(),
+                                l,
+                                nlcParams
+                            ), false);
+                    }
                 }
             } else {
                 //  Bulk
                 builder.setTitle(loc.localizeToLocale(
-                    CommandDispatcherImpl.getRootLocaleKey() + "help.title",
+                    getRootLocaleKey() + "help.title",
                     l,
                     nlcParams));
 
                 //  DESCRIPTION
                 String descKey = nameKey + ".desc";
-                if (loc.contains(descKey)) {
-                    builder.setDescription(loc.localizeToLocale(
-                        descKey,
-                        l,
-                        nlcParams));
-                } else {
-                    builder.setDescription(loc.localizeToLocale(
-                        CommandDispatcherImpl.getRootLocaleKey() + "help.desc",
-                        l,
-                        nlcParams));
-                }
+                builder.setDescription(this.localizeOrDefault(descKey, getRootLocaleKey() + "help.desc",
+                    l,
+                    nlcParams));
 
                 //  FOOTER
                 String footerKey = nameKey + ".footer";
-                if (loc.contains(footerKey)) {
-                    builder.setFooter(loc.localizeToLocale(
-                        footerKey,
-                        l,
-                        nlcParams), null);
-                } else {
-                    builder.setFooter(loc.localizeToLocale(
-                        CommandDispatcherImpl.getRootLocaleKey() + "help.footer",
-                        l,
-                        nlcParams), null);
-                }
+                builder.setFooter(this.localizeOrDefault(footerKey, getRootLocaleKey() + "help.footer",
+                    l,
+                    nlcParams), null);
 
                 //  COMMANDS
                 //  TODO categories (for now just bulk)
@@ -395,5 +459,20 @@ public class CommandRegistryImpl implements CommandRegistry {
 
             return CommandResult.ok();
         }
+
+        private String localizeOrDefault(String key, String defaultKey, Locale l, Object... args) {
+            if (loc.contains(key)) {
+                return loc.localizeToLocale(
+                    key,
+                    l,
+                    args);
+            } else {
+                return loc.localizeToLocale(
+                    defaultKey,
+                    l,
+                    args);
+            }
+        }
     }
+
 }

@@ -73,6 +73,9 @@ public class CommandDispatcherImpl implements CommandDispatcher {
             return;
         }
 
+        if (!cmdline.hasNext()) {
+            return;
+        }
 
         StandardGuildCommandContext context = new StandardGuildCommandContext(this.bot,
             event,
@@ -88,6 +91,8 @@ public class CommandDispatcherImpl implements CommandDispatcher {
             result = this.rootRegistry.invoke(context);
         } catch (Exception e) {
             err = e;
+            LOGGER.warn("Exception during command execution: {}",
+                cmdline.getOriginal(), e);
         }
         switch (result.getType()) {
             case ERROR:
