@@ -74,7 +74,9 @@ public class CommandRegistryImpl implements CommandRegistry {
         CommandWrapper command = this.getWrapperFor(context.getCommandLine(), context);
 
         //  Consume next token cuz getWrapperFor uses peek
-        context.getCommandLine().next();
+        if (context.getCommandLine().hasNext()) {
+            context.getCommandLine().next();
+        }
 
         if (command != null) {
             if (!hasPermissionFor(command, context)) {
