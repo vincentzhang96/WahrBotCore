@@ -99,4 +99,9 @@ public interface CommandRegistry extends Command {
      * @return The bottommost registry
      */
     CommandRegistry makeRegistries(String... keys);
+
+
+    void setUserPermissionConstraints(CommandConstraint<CommandContext> constraint);
+    void setBotPermissionConstraints(CommandConstraint<CommandContext> constraint);
+    void setOtherConstraints(CommandConstraint<CommandContext> constraint);
 }
