@@ -23,6 +23,7 @@ public class UserStoreImpl implements UserStore {
     private final User user;
     @Inject
     private JedisProvider provider;
+    private RedisMap<String> looseParams;
 
 
     public UserStoreImpl(User user) {
@@ -64,9 +65,11 @@ public class UserStoreImpl implements UserStore {
 
     @Override
     public void put(String key, String value) {
-        try (Jedis j = this.provider.get()) {
-            j.set(this.key(key), value);
+        if (this.looseParams == null) {
+            this.looseParams = new RedisMap<>(provider, this.key(), StandardGson.instance(), String.class);
         }
+
+        this.looseParams.put(key, value);
     }
 
     @Override
@@ -104,9 +107,11 @@ public class UserStoreImpl implements UserStore {
 
     @Override
     public String getString(String key) {
-        try (Jedis j = this.provider.get()) {
-            return j.get(this.key(key));
+        if (this.looseParams == null) {
+            this.looseParams = new RedisMap<>(provider, this.key(), StandardGson.instance(), String.class);
         }
+
+        return this.looseParams.get(key);
     }
 
     @Override

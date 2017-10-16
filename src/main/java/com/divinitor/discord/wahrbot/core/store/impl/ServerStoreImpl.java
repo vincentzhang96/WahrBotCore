@@ -34,6 +34,7 @@ public class ServerStoreImpl implements ServerStore {
     private final TLongObjectMap<WeakReference<MemberStoreImpl>> cache;
     @Inject
     private JedisProvider provider;
+    private RedisMap<String> looseParams;
 
     public ServerStoreImpl(Guild guild, Injector injector) {
         this.guild = guild;
@@ -105,9 +106,11 @@ public class ServerStoreImpl implements ServerStore {
 
     @Override
     public void put(String key, String value) {
-        try (Jedis j = this.provider.get()) {
-            j.set(this.key(key), value);
+        if (this.looseParams == null) {
+            this.looseParams = new RedisMap<>(provider, this.key(), StandardGson.instance(), String.class);
         }
+
+        this.looseParams.put(key, value);
     }
 
     @SuppressWarnings("unchecked")
@@ -147,9 +150,11 @@ public class ServerStoreImpl implements ServerStore {
 
     @Override
     public String getString(String key) {
-        try (Jedis j = this.provider.get()) {
-            return j.get(this.key(key));
+        if (this.looseParams == null) {
+            this.looseParams = new RedisMap<>(provider, this.key(), StandardGson.instance(), String.class);
         }
+
+        return this.looseParams.get(key);
     }
 
     @Override

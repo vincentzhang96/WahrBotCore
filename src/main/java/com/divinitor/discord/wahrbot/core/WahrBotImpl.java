@@ -19,8 +19,10 @@ import com.divinitor.discord.wahrbot.core.service.ServiceBus;
 import com.divinitor.discord.wahrbot.core.service.impl.ServiceBusImpl;
 import com.divinitor.discord.wahrbot.core.store.ServerStorage;
 import com.divinitor.discord.wahrbot.core.store.UserStorage;
-import com.divinitor.discord.wahrbot.core.util.inject.WahrBotModule;
+import com.divinitor.discord.wahrbot.core.store.impl.ServerStorageImpl;
+import com.divinitor.discord.wahrbot.core.store.impl.UserStorageImpl;
 import com.divinitor.discord.wahrbot.core.util.gson.StandardGson;
+import com.divinitor.discord.wahrbot.core.util.inject.WahrBotModule;
 import com.divinitor.discord.wahrbot.core.util.logging.SimpleLogRedirect;
 import com.divinitor.discord.wahrbot.core.util.metrics.EventBusMetricSet;
 import com.google.common.eventbus.AsyncEventBus;
@@ -50,7 +52,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -216,6 +219,9 @@ public class WahrBotImpl implements WahrBot {
         //  Start services
         this.eventListener = this.injector.getInstance(BotEventDispatcher.class);
         this.serviceBus.registerService(eventListener);
+
+        this.serverStorage = this.injector.getInstance(ServerStorageImpl.class);
+        this.userStorage = this.injector.getInstance(UserStorageImpl.class);
 
         RedisDynConfigStore rdcs = new RedisDynConfigStore();
         this.injector.injectMembers(rdcs);

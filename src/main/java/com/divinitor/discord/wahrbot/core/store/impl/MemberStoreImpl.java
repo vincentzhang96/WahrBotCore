@@ -22,6 +22,7 @@ public class MemberStoreImpl implements MemberStore {
     @Inject
     private JedisProvider provider;
     private final Member member;
+    private RedisMap<String> looseParams;
 
     public MemberStoreImpl(Member member) {
         this.member = member;
@@ -48,9 +49,11 @@ public class MemberStoreImpl implements MemberStore {
 
     @Override
     public void put(String key, String value) {
-        try (Jedis j = this.provider.get()) {
-            j.set(this.key(key), value);
+        if (this.looseParams == null) {
+            this.looseParams = new RedisMap<>(provider, this.key(), StandardGson.instance(), String.class);
         }
+
+        this.looseParams.put(key, value);
     }
 
     @Override
@@ -107,9 +110,11 @@ public class MemberStoreImpl implements MemberStore {
 
     @Override
     public String getString(String key) {
-        try (Jedis j = this.provider.get()) {
-            return j.get(this.key(key));
+        if (this.looseParams == null) {
+            this.looseParams = new RedisMap<>(provider, this.key(), StandardGson.instance(), String.class);
         }
+
+        return this.looseParams.get(key);
     }
 
     @Override
