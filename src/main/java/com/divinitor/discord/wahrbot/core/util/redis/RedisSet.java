@@ -64,7 +64,7 @@ public class RedisSet<V> implements Set<V> {
     public Iterator<V> iterator() {
         return new Iterator<V>() {
 
-            String cursor = "0";
+            String cursor = "";
             Deque<String> buffer = new LinkedList<>();
 
             @Override
@@ -89,6 +89,12 @@ public class RedisSet<V> implements Set<V> {
 
             private int buffer() {
                 try (Jedis j = RedisSet.this.pool.getResource()) {
+                    if (this.cursor.equalsIgnoreCase("0")) {
+                        return 0;
+                    } else if (this.cursor.isEmpty()) {
+                        this.cursor = "0";
+                    }
+
                     ScanResult<String> ret = j.sscan(RedisSet.this.base, cursor);
                     this.cursor = ret.getStringCursor();
                     this.buffer.addAll(ret.getResult());
