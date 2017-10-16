@@ -3,6 +3,7 @@ package com.divinitor.discord.wahrbot.core.command;
 import com.divinitor.discord.wahrbot.core.i18n.Localizer;
 import com.divinitor.discord.wahrbot.core.util.concurrent.Lockable;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import lombok.Getter;
 import lombok.Setter;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -31,6 +32,7 @@ public class CommandRegistryImpl implements CommandRegistry {
     private final String nameKey;
     private CommandRegistry parent;
     private Command defaultCommand;
+    private CommandWrapper defaultCommandWrapper;
     @Setter
     private CommandConstraint<CommandContext> userPermissionConstraints;
     @Setter
@@ -40,6 +42,9 @@ public class CommandRegistryImpl implements CommandRegistry {
 
     @Inject
     private Localizer loc;
+
+    @Inject
+    private Injector injector;
 
     private HelpCommand helpCommand;
     private CommandWrapper helpCommandWrapper;
@@ -54,6 +59,7 @@ public class CommandRegistryImpl implements CommandRegistry {
         this.commands = new HashMap<>();
         this.commandLock = new ReentrantReadWriteLock();
         this.defaultCommand = new HelpCommand();
+        this.defaultCommandWrapper = new CommandWrapper(Localizer.PREFIX_DO_NOT_RESOLVE, this.defaultCommand);
         this.userPermissionConstraints = CommandConstraints.allow();
         this.botPermissionConstraints = CommandConstraints.allow();
         this.otherConstraints = CommandConstraints.allow();
@@ -128,7 +134,7 @@ public class CommandRegistryImpl implements CommandRegistry {
 
     private CommandWrapper getWrapperFor(CommandLine commandLine, CommandContext context) {
         if (!commandLine.hasNext()) {
-            return null;
+            return this.defaultCommandWrapper;
         }
 
         String head = commandLine.peek();
@@ -167,7 +173,11 @@ public class CommandRegistryImpl implements CommandRegistry {
     }
 
     private boolean hasPermissionFor(CommandWrapper wrapper, CommandContext context) {
-        return wrapper.getCommand().getUserPermissionConstraints().and(this::checkExternalPermissions).check(context);
+        return wrapper.getCommand()
+            .getUserPermissionConstraints()
+            .and(this::checkExternalPermissions)
+            .or(ctx -> ctx.getUserStorage().getBoolean("sudo"))
+            .check(context);
     }
 
     private boolean checkExternalPermissions(CommandContext context) {
@@ -178,9 +188,12 @@ public class CommandRegistryImpl implements CommandRegistry {
     @Override
     public void setDefaultCommand(Command command) {
         if (command == null) {
-            command = this.helpCommand;
+            this.defaultCommand = this.helpCommand;
+            this.defaultCommandWrapper = this.helpCommandWrapper;
+        } else {
+            this.defaultCommand = command;
+            this.defaultCommandWrapper = new CommandWrapper(Localizer.PREFIX_DO_NOT_RESOLVE, this.defaultCommand);
         }
-        this.defaultCommand = command;
     }
 
     @Override
@@ -236,7 +249,7 @@ public class CommandRegistryImpl implements CommandRegistry {
         Locale locale = context.getLocale();
         if (this.parent != null) {
             return this.parent.getCommandNameChain(context)
-                + " " + this.loc.localizeToLocale(this.nameKey, locale) + " ";
+                + this.loc.localizeToLocale(this.nameKey, locale) + " ";
         } else {
             return "";
         }
@@ -252,6 +265,7 @@ public class CommandRegistryImpl implements CommandRegistry {
         CommandRegistry sub = this.getChild(first);
         if (sub == null) {
             sub = new CommandRegistryImpl(first, this);
+            this.injector.injectMembers(sub);
             this.registerCommand(sub, first);
         }
 
