@@ -49,6 +49,10 @@ public interface DynConfigStore {
         return this.deserializer(clazz).apply(this.getString(key), clazz);
     }
 
+    default <T, V> T getObject(String key, Class<T> clazz, Class<V> vClass) {
+        return this.getObject(key, clazz);
+    }
+
     default DynConfigHandle getStringHandle(String key) {
         return () -> this.getString(key);
     }

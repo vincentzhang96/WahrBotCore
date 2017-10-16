@@ -107,6 +107,7 @@ public class CommandDispatcherImpl implements CommandDispatcher {
             case NO_SUCH_COMMAND:
             case OK:
             case HANDLED:
+            case REJECTED:
                 //  Ignored
                 break;
         }

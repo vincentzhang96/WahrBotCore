@@ -92,17 +92,23 @@ public class MemberStoreImpl implements MemberStore {
         }
     }
 
-    @SuppressWarnings("unchecked")
+
     @Override
     public <T> T getObject(String key, Class<T> clazz) {
+        return this.getObject(key, clazz, String.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T, V> T getObject(String key, Class<T> clazz, Class<V> vClass) {
         if (clazz == String.class) {
             return (T) this.getString(key);
         } else if (clazz.isAssignableFrom(Map.class)) {
-            return (T) new RedisMap<>(this.provider, key(key), StandardGson.instance(), clazz);
+            return (T) new RedisMap<>(this.provider, this.key(key), StandardGson.instance(), vClass);
         } else if (clazz.isAssignableFrom(List.class)) {
-            return (T) new RedisList<>(this.provider, key(key), StandardGson.instance(), clazz);
+            return (T) new RedisList<>(this.provider, this.key(key), StandardGson.instance(), vClass);
         } else if (clazz.isAssignableFrom(Set.class)) {
-            return (T) new RedisSet<>(this.provider, key(key), StandardGson.instance(), clazz);
+            return (T) new RedisSet<>(this.provider, this.key(key), StandardGson.instance(), vClass);
         } else {
             return this.deserializer(clazz).apply(this.getString(key), clazz);
         }
