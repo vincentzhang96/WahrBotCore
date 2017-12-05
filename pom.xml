@@ -67,16 +67,16 @@
                         </manifest>
                     </archive>
                     <descriptorRefs>
-                        <!--<descriptorRef>jar-with-dependencies</descriptorRef>-->
-                        <descriptorRef>jar</descriptorRef>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                        <!--<descriptorRef>jar</descriptorRef>-->
                     </descriptorRefs>
                 </configuration>
                 <executions>
                     <execution>
                         <phase>package</phase>
-                        <!--<goals>-->
-                        <!--<goal>single</goal>-->
-                        <!--</goals>-->
+                        <goals>
+                        <goal>single</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
