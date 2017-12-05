@@ -9,6 +9,7 @@ import com.divinitor.discord.wahrbot.core.module.ModuleManager;
 import com.divinitor.discord.wahrbot.core.service.ServiceBus;
 import com.divinitor.discord.wahrbot.core.store.ServerStorage;
 import com.divinitor.discord.wahrbot.core.store.UserStorage;
+import com.divinitor.discord.wahrbot.core.toggle.ToggleRegistry;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.inject.Injector;
 import net.dv8tion.jda.core.JDA;
@@ -54,6 +55,10 @@ public interface WahrBot {
     ServerStorage getServerStorage();
 
     UserStorage getUserStorage();
+
+    ToggleRegistry getToggleRegistry();
+
+    void setToggleRegistry(ToggleRegistry registry);
 
     void shutdown();
 

@@ -21,9 +21,12 @@ import com.divinitor.discord.wahrbot.core.store.ServerStorage;
 import com.divinitor.discord.wahrbot.core.store.UserStorage;
 import com.divinitor.discord.wahrbot.core.store.impl.ServerStorageImpl;
 import com.divinitor.discord.wahrbot.core.store.impl.UserStorageImpl;
+import com.divinitor.discord.wahrbot.core.toggle.ToggleRegistry;
+import com.divinitor.discord.wahrbot.core.toggle.impl.MemoryTransientToggleRegistry;
+import com.divinitor.discord.wahrbot.core.toggle.impl.WeakToggleRegistryProxy;
+import com.divinitor.discord.wahrbot.core.util.discord.SnowflakeUtils;
 import com.divinitor.discord.wahrbot.core.util.gson.StandardGson;
 import com.divinitor.discord.wahrbot.core.util.inject.WahrBotModule;
-import com.divinitor.discord.wahrbot.core.util.logging.SimpleLogRedirect;
 import com.divinitor.discord.wahrbot.core.util.metrics.EventBusMetricSet;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.SubscriberExceptionContext;
@@ -125,6 +128,11 @@ public class WahrBotImpl implements WahrBot {
     @Getter
     private ServerStorage serverStorage;
 
+    @Getter
+    private WeakToggleRegistryProxy toggleRegistry;
+
+    private MemoryTransientToggleRegistry backupRegistry;
+
     public WahrBotImpl() {
         this.botDir = Paths.get(
                 System.getProperty("com.divinitor.discord.wahrbot.home", ""))
@@ -167,6 +175,9 @@ public class WahrBotImpl implements WahrBot {
 
     private void init() {
         LOGGER.info("Starting {}...", this.getApplicationName());
+
+        //  Use no-op toggle
+        this.toggleRegistry = new WeakToggleRegistryProxy(null);
 
         //  Load config, init core services, and connect to DBs/KVSs
         Gson gson = StandardGson.pretty();
@@ -217,17 +228,19 @@ public class WahrBotImpl implements WahrBot {
         this.injector = Guice.createInjector(new WahrBotModule(this));
 
         //  Start services
+
+        //  event listener
         this.eventListener = this.injector.getInstance(BotEventDispatcher.class);
         this.serviceBus.registerService(eventListener);
-
+        //  server and user data storage
         this.serverStorage = this.injector.getInstance(ServerStorageImpl.class);
         this.userStorage = this.injector.getInstance(UserStorageImpl.class);
-
+        //  dynconfig
         RedisDynConfigStore rdcs = new RedisDynConfigStore();
         this.injector.injectMembers(rdcs);
         this.dynConfigStore = new CachingDynConfigStore(rdcs);
         this.serviceBus.registerService(DynConfigStore.class, this.dynConfigStore);
-
+        //  command dispatch
         this.commandDispatcher = new CommandDispatcherImpl(this);
         this.injector.injectMembers(this.commandDispatcher);
         this.eventBus.register(this.commandDispatcher);
@@ -240,12 +253,18 @@ public class WahrBotImpl implements WahrBot {
         this.injector.injectMembers(this.moduleManager);
 
         this.moduleManager.loadLatestModulesFromList();
+
+        if (this.toggleRegistry.getRegistry().get() == null) {
+            LOGGER.warn("No toggle registry implementation was set by a module. " +
+                "Using an in-memory transient toggle registry instead.");
+            this.backupRegistry = new MemoryTransientToggleRegistry();
+            this.toggleRegistry.setBaseRegistry(this.backupRegistry);
+        }
     }
 
     private void startBot() {
         //  Connect to Discord and begin general execution
         LOGGER.info("Connecting to Discord...");
-        SimpleLogRedirect.addListener();
 
         while (true) {
             try {
@@ -272,9 +291,10 @@ public class WahrBotImpl implements WahrBot {
             }
         }
 
-        LOGGER.info("Connected to Discord as {}#{}",
+        LOGGER.info("Connected to Discord as {}#{} ({})",
             apiClient.getSelfUser().getName(),
-            apiClient.getSelfUser().getDiscriminator());
+            apiClient.getSelfUser().getDiscriminator(),
+            SnowflakeUtils.encode(apiClient.getSelfUser().getIdLong()));
 
         LOGGER.info("Connected to {} servers with {} channels and {} unique users",
             String.format("%,d", apiClient.getGuilds().size()),
@@ -337,6 +357,11 @@ public class WahrBotImpl implements WahrBot {
                     this.getApplicationName());
             shutdownExceptions.forEach(LOGGER::warn);
         }
+    }
+
+    @Override
+    public void setToggleRegistry(ToggleRegistry registry) {
+        this.toggleRegistry.setBaseRegistry(toggleRegistry);
     }
 
     @Override

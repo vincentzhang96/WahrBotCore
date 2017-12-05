@@ -3,10 +3,12 @@ package com.divinitor.discord.wahrbot.core.command;
 import com.divinitor.discord.wahrbot.core.WahrBot;
 import com.divinitor.discord.wahrbot.core.config.dyn.DynConfigHandle;
 import com.divinitor.discord.wahrbot.core.i18n.ResourceBundleBundle;
+import com.divinitor.discord.wahrbot.core.store.ServerStore;
+import com.divinitor.discord.wahrbot.core.store.UserStore;
 import com.google.common.eventbus.Subscribe;
 import lombok.Getter;
 import net.dv8tion.jda.core.MessageBuilder;
-import net.dv8tion.jda.core.entities.ISnowflake;
+import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.priv.PrivateMessageReceivedEvent;
@@ -146,15 +148,21 @@ public class CommandDispatcherImpl implements CommandDispatcher {
 
     private boolean shouldIgnore(User author) {
         //  Bots and other undesirables get ignored here
-        //  TODO user blacklist
         if (author.isBot()) {
             return true;
         }
-        return false;
+
+        UserStore us = this.bot.getUserStorage().forUser(author);
+        return us.getBoolean("blacklist");
     }
 
-    public String getPrefixForServer(ISnowflake guildId) {
-        //  TODO
+    public String getPrefixForServer(Guild guild) {
+        ServerStore ss = this.bot.getServerStorage().forServer(guild);
+        String prefix = ss.getString("prefix");
+        if (prefix != null) {
+            return prefix;
+        }
+
         return this.defaultCommandPrefixHandle.get();
     }
 
