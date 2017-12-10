@@ -1,5 +1,7 @@
 package com.divinitor.discord.wahrbot.core.util.discord;
 
+import net.dv8tion.jda.core.entities.ISnowflake;
+
 public class SnowflakeUtils {
 
     public static final long DISCORD_EPOCH_MS = 1420070400000L;
@@ -22,6 +24,10 @@ public class SnowflakeUtils {
 
     public static long getTimestampMs(String snowflake) {
         return getTimestampMs(Long.parseUnsignedLong(snowflake));
+    }
+
+    public static String encode(ISnowflake snowflake) {
+        return encode(snowflake.getIdLong());
     }
 
     public static String encode(long snowflake) {
