@@ -39,7 +39,6 @@ import lombok.Getter;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
-import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.hooks.InterfacedEventManager;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.slf4j.Logger;
@@ -54,7 +53,6 @@ import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -276,16 +274,7 @@ public class WahrBotImpl implements WahrBot {
                     .buildBlocking();
                 break;
             } catch (LoginException e) {
-                LOGGER.error("Bad Discord token", e);
-            } catch (RateLimitedException e) {
-                long retryAfter = e.getRetryAfter();
-                LOGGER.warn("Login was rate limited, retrying after {}s...",
-                    retryAfter);
-                try {
-                    Thread.sleep(Duration.ofSeconds(retryAfter).toMillis());
-                } catch (InterruptedException ignored) {
-                    //  Ignore
-                }
+                throw new RuntimeException("Invalid token", e);
             } catch (InterruptedException ignored) {
                 //  Ignore
             }
