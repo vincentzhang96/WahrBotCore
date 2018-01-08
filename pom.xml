@@ -6,7 +6,7 @@
 
     <groupId>com.divinitor.discord.wahrbot</groupId>
     <artifactId>WahrBotCore</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -131,7 +131,7 @@
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>3.3.1_308</version>
+            <version>3.4.0_324</version>
         </dependency>
 
         <!-- Lombok -->
