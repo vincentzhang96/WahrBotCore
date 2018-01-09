@@ -196,7 +196,7 @@ public class ModuleManagerImpl implements ModuleManager {
                     info.getMainClass());
             }
 
-            ModuleHandleImpl handle = new ModuleHandleImpl(module, loader, info, bot.getInjector());
+            ModuleHandleImpl handle = new ModuleHandleImpl(module, loader, info, bot.getInjector(), bulk);
             this.loadedModules.put(moduleId, handle);
 
             try {
@@ -269,12 +269,12 @@ public class ModuleManagerImpl implements ModuleManager {
         }
     }
 
-    private void bulkLoadModule(String modId) throws ModuleLoadException {
-        this.loadModuleImpl(modId, true);
+    private Module bulkLoadModule(String modId) throws ModuleLoadException {
+        return this.loadModuleImpl(modId, true);
     }
 
-    private void bulkLoadModule(String modId, Version version) throws ModuleLoadException {
-        this.loadModuleImpl(modId, version, true);
+    private Module bulkLoadModule(String modId, Version version) throws ModuleLoadException {
+        return this.loadModuleImpl(modId, version, true);
     }
 
     @Override
@@ -308,10 +308,11 @@ public class ModuleManagerImpl implements ModuleManager {
                 new TypeToken<Map<String, String>>() {
                 }.getType());
 
+            List<Module> newlyLoaded = new ArrayList<>();
             try (Lockable l = acquire(lock.writeLock())) {
                 values.forEach((k, v) -> {
                     try {
-                        this.bulkLoadModule(k, Version.valueOf(v));
+                        newlyLoaded.add(this.bulkLoadModule(k, Version.valueOf(v)));
                     } catch (ModuleLoadException mle) {
                         if (aggregate.get() == null) {
                             aggregate.set(mle);
@@ -328,7 +329,18 @@ public class ModuleManagerImpl implements ModuleManager {
                     }
                 });
 
-
+                newlyLoaded.forEach(m -> {
+                    try {
+                        m.postBatchInit();
+                    } catch (Exception e) {
+                        if (aggregate.get() == null) {
+                            ModuleLoadException mle = new ModuleLoadException(e);
+                            aggregate.set(mle);
+                        } else {
+                            aggregate.get().addSuppressed(e);
+                        }
+                    }
+                });
             }
         } catch (FileNotFoundException fnfe) {
             throw new ModuleLoadException("Could not load module list");
@@ -393,12 +405,14 @@ public class ModuleManagerImpl implements ModuleManager {
         private final ModuleClassLoader classLoader;
         private final ModuleInformation moduleInfo;
         private Injector injector;
+        private final boolean bulk;
 
-        ModuleHandleImpl(Module module, ModuleClassLoader classLoader, ModuleInformation moduleInfo, Injector injector) {
+        ModuleHandleImpl(Module module, ModuleClassLoader classLoader, ModuleInformation moduleInfo, Injector injector, boolean bulk) {
             this.module = module;
             this.classLoader = classLoader;
             this.moduleInfo = moduleInfo;
             this.injector = injector;
+            this.bulk = bulk;
         }
 
         @Override
@@ -414,6 +428,11 @@ public class ModuleManagerImpl implements ModuleManager {
         @Override
         public Injector getInjector() {
             return injector;
+        }
+
+        @Override
+        public boolean bulkLoad() {
+            return bulk;
         }
     }
 

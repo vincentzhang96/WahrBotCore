@@ -7,4 +7,6 @@ public interface ModuleContext {
     ModuleInformation getModuleInfo();
 
     Injector getInjector();
+
+    boolean bulkLoad();
 }
