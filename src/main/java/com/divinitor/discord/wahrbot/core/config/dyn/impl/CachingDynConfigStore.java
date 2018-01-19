@@ -39,6 +39,9 @@ public class CachingDynConfigStore implements DynConfigStore {
             return this.cache.get(key);
         } catch (ExecutionException e) {
             return this.supplier.getString(key);
+        } catch (CacheLoader.InvalidCacheLoadException icle) {
+            //  This is only returned if the key loaded is null
+            return null;
         }
     }
 
