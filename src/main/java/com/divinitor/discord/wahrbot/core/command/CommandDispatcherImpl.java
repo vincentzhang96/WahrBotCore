@@ -21,7 +21,7 @@ public class CommandDispatcherImpl implements CommandDispatcher {
 
     private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    public static final String DEFAULT_COMMAND_PREFIX_KEY = "com.divinitor.discord.wahrbot.core.command.prefix.default";
+    public static final String DEFAULT_COMMAND_PREFIX_KEY = "core.command.prefix.default";
 
     private static final String ROOT_LOCALE_KEY = "com.divinitor.discord.wahrbot.cmd.";
 
