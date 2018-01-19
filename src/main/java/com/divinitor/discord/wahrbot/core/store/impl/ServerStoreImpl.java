@@ -3,6 +3,7 @@ package com.divinitor.discord.wahrbot.core.store.impl;
 import com.divinitor.discord.wahrbot.core.store.MemberStore;
 import com.divinitor.discord.wahrbot.core.store.ServerStore;
 import com.divinitor.discord.wahrbot.core.util.concurrent.Lockable;
+import com.divinitor.discord.wahrbot.core.util.discord.SnowflakeUtils;
 import com.divinitor.discord.wahrbot.core.util.gson.StandardGson;
 import com.divinitor.discord.wahrbot.core.util.inject.JedisProvider;
 import com.divinitor.discord.wahrbot.core.util.redis.RedisList;
@@ -27,7 +28,7 @@ import java.util.function.Function;
 
 public class ServerStoreImpl implements ServerStore {
 
-    private static final String BASE_KEY = "com.divinitor.discord.wahrbot.core.store.server";
+    private static final String BASE_KEY = "core.store.server";
     private final Guild guild;
     private final Injector injector;
     private final ReadWriteLock lock;
@@ -46,7 +47,7 @@ public class ServerStoreImpl implements ServerStore {
     private String key(String... args) {
         StringJoiner joiner = new StringJoiner(".");
         joiner.add(BASE_KEY);
-        joiner.add(this.guild.getId());
+        joiner.add(SnowflakeUtils.encode(this.guild));
         for (String arg : args) {
             joiner.add(arg);
         }

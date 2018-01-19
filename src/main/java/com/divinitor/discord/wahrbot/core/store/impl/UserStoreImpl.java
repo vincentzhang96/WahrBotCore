@@ -1,6 +1,7 @@
 package com.divinitor.discord.wahrbot.core.store.impl;
 
 import com.divinitor.discord.wahrbot.core.store.UserStore;
+import com.divinitor.discord.wahrbot.core.util.discord.SnowflakeUtils;
 import com.divinitor.discord.wahrbot.core.util.gson.StandardGson;
 import com.divinitor.discord.wahrbot.core.util.inject.JedisProvider;
 import com.divinitor.discord.wahrbot.core.util.redis.RedisList;
@@ -19,7 +20,7 @@ import java.util.function.Function;
 @SuppressWarnings("unchecked")
 public class UserStoreImpl implements UserStore {
 
-    private static final String BASE_KEY = "com.divinitor.discord.wahrbot.core.store.user";
+    private static final String BASE_KEY = "core.store.user";
     private final User user;
     @Inject
     private JedisProvider provider;
@@ -33,7 +34,7 @@ public class UserStoreImpl implements UserStore {
     private String key(String... args) {
         StringJoiner joiner = new StringJoiner(".");
         joiner.add(BASE_KEY);
-        joiner.add(this.user.getId());
+        joiner.add(SnowflakeUtils.encode(this.user));
         for (String arg : args) {
             joiner.add(arg);
         }

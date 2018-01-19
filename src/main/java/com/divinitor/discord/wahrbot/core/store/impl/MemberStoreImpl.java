@@ -18,7 +18,7 @@ import java.util.function.Function;
 
 public class MemberStoreImpl implements MemberStore {
 
-    private static final String BASE_KEY = "com.divinitor.discord.wahrbot.core.store.server";
+    private static final String BASE_KEY = "core.store.server";
     @Inject
     private JedisProvider provider;
     private final Member member;
