@@ -55,7 +55,7 @@ public class CommandDispatcherImpl implements CommandDispatcher {
             return;
         }
 
-        CommandLine cmdline = new CommandLine(event.getMessage().getRawContent());
+        CommandLine cmdline = new CommandLine(event.getMessage().getContentRaw());
         cmdline.takeOptionalPrefix(this.defaultCommandPrefixHandle.get());
         //  TODO
         CommandContext context = null;
@@ -70,7 +70,7 @@ public class CommandDispatcherImpl implements CommandDispatcher {
             return;
         }
 
-        CommandLine cmdline = new CommandLine(event.getMessage().getRawContent());
+        CommandLine cmdline = new CommandLine(event.getMessage().getContentRaw());
         if (!cmdline.hasPrefixAndTake(this.getPrefixForServer(event.getGuild()))) {
             return;
         }

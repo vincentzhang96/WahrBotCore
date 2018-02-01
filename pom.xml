@@ -131,7 +131,7 @@
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>3.4.0_324</version>
+            <version>3.5.0_332</version>
         </dependency>
 
         <!-- Lombok -->
