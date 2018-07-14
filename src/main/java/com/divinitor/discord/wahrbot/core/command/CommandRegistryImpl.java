@@ -84,12 +84,14 @@ public class CommandRegistryImpl implements CommandRegistry {
             }
 
             Command cmd = command.getCommand();
-            if (!cmd.getBotPermissionConstraints().check(context)) {
-                return CommandResult.noBotPerm();
-            }
+            if (!ctx.getUserStorage().getBoolean("sudo")) {
+                if (!cmd.getBotPermissionConstraints().check(context)) {
+                    return CommandResult.noBotPerm();
+                }
 
-            if (!cmd.getOtherConstraints().check(context)) {
-                return CommandResult.rejected();
+                if (!cmd.getOtherConstraints().check(context)) {
+                    return CommandResult.rejected();
+                }
             }
 
             context.setNameKey(command.getKey());
