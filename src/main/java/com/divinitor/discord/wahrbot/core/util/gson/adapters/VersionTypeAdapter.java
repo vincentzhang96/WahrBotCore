@@ -7,6 +7,9 @@ import com.google.gson.stream.JsonWriter;
 
 import java.io.IOException;
 
+/**
+ * A Gson type adapter for a {@link Version}
+ */
 public class VersionTypeAdapter extends TypeAdapter<Version> {
     @Override
     public void write(JsonWriter jsonWriter, Version version) throws IOException {

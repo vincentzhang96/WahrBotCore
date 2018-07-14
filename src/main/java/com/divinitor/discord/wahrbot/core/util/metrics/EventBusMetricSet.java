@@ -12,10 +12,24 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * A set of metrics for the event bus, tracking event rate, error rates, etc.
+ */
 public class EventBusMetricSet implements MetricSet {
 
+    /**
+     * The event bus to monitor
+     */
     private final EventBus eventBus;
+
+    /**
+     * The event meter
+     */
     private final Meter eventMeter;
+
+    /**
+     * The error meter
+     */
     private final Meter errorMeter;
 
     public EventBusMetricSet(EventBus eventBus) {
@@ -25,11 +39,18 @@ public class EventBusMetricSet implements MetricSet {
         this.errorMeter = new Meter();
     }
 
+    /**
+     * Listens for all events from the event bus
+     * @param event The event
+     */
     @Subscribe
     public void handle(Object event) {
         this.eventMeter.mark();
     }
 
+    /**
+     * Increment the event error count
+     */
     public void incrEventExceptionCount() {
         this.errorMeter.mark();
     }

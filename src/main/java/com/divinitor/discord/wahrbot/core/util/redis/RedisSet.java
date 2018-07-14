@@ -8,14 +8,46 @@ import redis.clients.jedis.ScanResult;
 
 import java.util.*;
 
+/**
+ * An implementation of {@link Set} that's backed by Redis.
+ * @param <V> The value type
+ */
 public class RedisSet<V> implements Set<V> {
 
+    /**
+     * The Redis connection pool
+     */
     private final JedisProvider pool;
+
+    /**
+     * The base key/key prefix to use.
+     */
     private final String base;
+
+    /**
+     * JSON serializer/deserializer
+     */
     private final Gson gson;
+
+    /**
+     * The class of the generic type (so we can properly serialize/deserialize), as generic type information is erased
+     * at runtime
+     */
     private final Class<V> vClass;
+
+    /**
+     * Whether or not the generic type is a string. If the generic type is a string, then we can skip serialization and
+     * deserialization.
+     */
     private final boolean stringType;
 
+    /**
+     * Create a RedisSet with the given pool, key base, Gson instance, and type.
+     * @param pool The Redis connection pool to use
+     * @param base The base key to use
+     * @param gson The serializer/deserializer to use. Please register any custom type converters as needed.
+     * @param vClass The generic type class
+     */
     public RedisSet(JedisProvider pool, String base, Gson gson, Class<V> vClass) {
         this.pool = pool;
         this.base = base;
@@ -24,6 +56,15 @@ public class RedisSet<V> implements Set<V> {
         this.stringType = this.vClass == String.class;
     }
 
+    /**
+     * Create a RedisSet with the given pool, key base, Gson instance, and type, initialized with the given elements
+     * from the provided collection
+     * @param pool The Redis connection pool to use
+     * @param base The base key to use
+     * @param gson The serializer/deserializer to use. Please register any custom type converters as needed.
+     * @param vClass The generic type class
+     * @param c A collection of elements to initialize this set with
+     */
     public RedisSet(JedisProvider pool, String base, Gson gson, Class<V> vClass, Collection<V> c) {
         this(pool, base, gson, vClass);
         this.addAll(c);

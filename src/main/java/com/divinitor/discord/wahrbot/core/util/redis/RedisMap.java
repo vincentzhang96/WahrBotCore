@@ -10,14 +10,46 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * An implementation of {@link Map} that's backed by Redis. Keys must be strings.
+ * @param <V> The value type
+ */
 public class RedisMap<V> implements Map<String, V> {
 
+    /**
+     * The Redis connection pool
+     */
     private final JedisProvider pool;
+
+    /**
+     * The base key/key prefix to use.
+     */
     private final String base;
+
+    /**
+     * JSON serializer/deserializer
+     */
     private final Gson gson;
+
+    /**
+     * The class of the generic type (so we can properly serialize/deserialize), as generic type information is erased
+     * at runtime
+     */
     private final Class<V> vClass;
+
+    /**
+     * Whether or not the generic type is a string. If the generic type is a string, then we can skip serialization and
+     * deserialization.
+     */
     private final boolean stringType;
 
+    /**
+     * Create a RedisMap with the given pool, key base, Gson instance, and type.
+     * @param pool The Redis connection pool to use
+     * @param base The base key to use
+     * @param gson The serializer/deserializer to use. Please register any custom type converters as needed.
+     * @param vClass The generic type class
+     */
     public RedisMap(JedisProvider pool, String base, Gson gson, Class<V> vClass) {
         this.pool = pool;
         this.base = base;
@@ -26,6 +58,15 @@ public class RedisMap<V> implements Map<String, V> {
         this.stringType = this.vClass == String.class;
     }
 
+    /**
+     * Create a RedisMap with the given pool, key base, Gson instance, and type, initialized with the given elements
+     * from the provided collection
+     * @param pool The Redis connection pool to use
+     * @param base The base key to use
+     * @param gson The serializer/deserializer to use. Please register any custom type converters as needed.
+     * @param vClass The generic type class
+     * @param val A map of elements to initialize this map with
+     */
     public RedisMap(JedisProvider pool, String base, Gson gson, Class<V> vClass, Map<String, V> val) {
         this(pool, base, gson, vClass);
         this.putAll(val);
