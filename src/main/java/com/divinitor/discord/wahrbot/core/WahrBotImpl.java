@@ -63,114 +63,216 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class WahrBotImpl implements WahrBot {
 
+    /**
+     * Timeout before SQL connection fails
+     */
     private static final int DATA_TIMEOUT_MS = 2000;
 
+    /**
+     * Main entry point
+     * @param args Command line args
+     */
     public static void main(String[] args) {
+        //  Create bot and launch
         WahrBot bot = new WahrBotImpl();
         bot.run();
     }
 
+    /**
+     * The logger instance
+     */
     private final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+    /**
+     * The dependency injector
+     */
     @Getter
     private Injector injector;
 
+    /**
+     * The bot config
+     */
     @Getter
     private BotConfig config;
 
+    /**
+     * The bot's working directory
+     */
     @Getter
     private final Path botDir;
 
+    /**
+     * The JDA API client
+     */
     @Getter
     private JDA apiClient;
 
+    /**
+     * The SQL connection manager
+     */
     @Getter
     private HikariDataSource dataSource;
 
+    /**
+     * The Redis connection pool
+     */
     @Getter
     private JedisPool jedisPool;
 
+    /**
+     * The bot's JDA event listener
+     */
     @Getter
     private BotEventDispatcher eventListener;
 
+    /**
+     * The event bus
+     */
     @Getter
     private AsyncEventBus eventBus;
 
+    /**
+     * The executor service
+     */
     @Getter
     private ScheduledExecutorService executorService;
 
+    /**
+     * The root metric registry
+     */
     @Getter
     private MetricRegistry metrics;
 
+    /**
+     * The metric set for the event bus
+     */
     private EventBusMetricSet eventBusMetricSet;
+
+    /**
+     * The metric reporter (currently unused)
+     */
     private final Reporter reporter;
 
+    /**
+     * The module manager
+     */
     @Getter
     private ModuleManager moduleManager;
 
+    /**
+     * The dynamic configuration store
+     */
     @Getter
     private DynConfigStore dynConfigStore;
 
+    /**
+     * The service bus
+     */
     @Getter
     private ServiceBus serviceBus;
 
+    /**
+     * The localizer
+     */
     @Getter
     private Localizer localizer;
 
+    /**
+     * The root command dispatcher
+     */
     @Getter
     private CommandDispatcher commandDispatcher;
 
+    /**
+     * User information store
+     */
     @Getter
     private UserStorage userStorage;
 
+    /**
+     * Storage information store
+     */
     @Getter
     private ServerStorage serverStorage;
 
+    /**
+     * The toggle registry
+     */
     @Getter
     private WeakToggleRegistryProxy toggleRegistry;
 
+    /**
+     * A transient (non-permanent) toggle registry to use as a fallback if no toggle registry implementation is
+     * registered
+     */
     private MemoryTransientToggleRegistry backupRegistry;
 
+    /**
+     * Constructor
+     */
     public WahrBotImpl() {
+        //  Get the bot's working directory. If the environment variable "com.divinitor.discord.wahrbot.home" is set,
+        //  try using that. If not, use the current directory
         this.botDir = Paths.get(
                 System.getProperty("com.divinitor.discord.wahrbot.home", ""))
                 .toAbsolutePath();
+        //  Add a shutdown hook to clean up
         Runtime.getRuntime().addShutdownHook(new Thread(this::onShutdown));
 
+        //  Create an executor with a thread pool with minimum as many threads as there are available processors on
+        //  the machine
         this.executorService = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+
+        //  Localizer
         this.localizer = new LocalizerImpl();
 
+        //  Event bus, using our executor service, and handling errors through our handler
         this.eventBus = new AsyncEventBus(this.executorService, this::handleEventBusException);
+        //  Event bus metrics
         this.eventBusMetricSet = new EventBusMetricSet(eventBus);
 
+        //  Metric registry
         this.metrics = new MetricRegistry();
+        //  Register our event bus metrics
         this.metrics.registerAll(this.eventBusMetricSet);
 
+        //  TEMPORARY: Report our metrics to the console every minute
         ConsoleReporter re = ConsoleReporter.forRegistry(this.metrics)
             .convertDurationsTo(TimeUnit.SECONDS)
             .convertRatesTo(TimeUnit.SECONDS)
             .build();
         re.start(1, TimeUnit.MINUTES);
         this.reporter = re;
+
+        //  Service bus
         this.serviceBus = new ServiceBusImpl();
     }
 
+    /**
+     * Handles unhandled exceptions during event handling. The exeception is logged and the failure recorded in metrics
+     * @param exception The exception that was thrown
+     * @param context The context in which the exception was thrown
+     */
     private void handleEventBusException(Throwable exception, SubscriberExceptionContext context) {
         this.eventBusMetricSet.incrEventExceptionCount();
         String err = String.format("Exception while bussing an event %3$s to subscriber %1$s with listener %2$s",
-            context.getSubscriber().getClass().toString(),
-            context.getSubscriberMethod().toGenericString(),
-            context.getEvent().getClass().toString());
+            context.getSubscriber().getClass().toString(),  //  Throwing class
+            context.getSubscriberMethod().toGenericString(),    //  Throwing method
+            context.getEvent().getClass().toString());  //  Event class
         this.LOGGER.error(err, exception);
     }
 
     @Override
     public void run() {
+        //  Initialize, load modules, and then start doing work
         this.init();
         this.loadModules();
         this.startBot();
     }
 
+    /**
+     * Initializes the bot. The configuration is loaded, databases connected to, and services started.
+     */
     private void init() {
         LOGGER.info("Starting {}...", this.getApplicationName());
 
@@ -202,7 +304,8 @@ public class WahrBotImpl implements WahrBot {
             hikariConfig.setConnectionTimeout(DATA_TIMEOUT_MS);
             this.dataSource = new HikariDataSource(hikariConfig);
         } catch (Exception e) {
-            throw new RuntimeException("Unable to connect to SQL server", e);
+            //  TODO We don't currently use this so make this a soft error, but we should figure out something
+//            throw new RuntimeException("Unable to connect to SQL server", e);
         }
 
         //  Init Redis connection
@@ -216,6 +319,7 @@ public class WahrBotImpl implements WahrBot {
                 redisCredentials.getPassword(),
                 redisCredentials.getDatabase());
 
+        //  Test the connection
         try (Jedis jedis = this.jedisPool.getResource()) {
             jedis.ping();
         } catch (Exception e) {
@@ -250,8 +354,10 @@ public class WahrBotImpl implements WahrBot {
         this.moduleManager = new ModuleManagerImpl(this);
         this.injector.injectMembers(this.moduleManager);
 
+        //  Load the modules from the modules.json file
         this.moduleManager.loadLatestModulesFromList();
 
+        //  A module should have registered a ToggleRegistry, but if not we'll use a temporary one
         if (this.toggleRegistry.getRegistry().get() == null) {
             LOGGER.warn("No toggle registry implementation was set by a module. " +
                 "Using an in-memory transient toggle registry instead.");
@@ -260,6 +366,9 @@ public class WahrBotImpl implements WahrBot {
         }
     }
 
+    /**
+     * Connect to Discord and begin execution
+     */
     private void startBot() {
         //  Connect to Discord and begin general execution
         LOGGER.info("Connecting to Discord...");
@@ -291,6 +400,9 @@ public class WahrBotImpl implements WahrBot {
             String.format("%,d", apiClient.getUsers().size()));
     }
 
+    /**
+     * Handles cleanup on shutdown
+     */
     private void onShutdown() {
         LOGGER.info("Shutting down {}", this.getApplicationName());
         Map<String, Exception> shutdownExceptions = new HashMap<>();
@@ -339,6 +451,7 @@ public class WahrBotImpl implements WahrBot {
             shutdownExceptions.put("redis", e);
         }
 
+        //  If we got no errors, we're good, if we did then warn the user but that's all we can really do
         if (shutdownExceptions.isEmpty()) {
             LOGGER.info("Shutdown successful");
         } else {
@@ -360,11 +473,13 @@ public class WahrBotImpl implements WahrBot {
 
     @Override
     public void shutdown() {
+        //  The management script expects a 0 exit code for clean exit
         System.exit(0);
     }
 
     @Override
     public void restart() {
+        //  The management script will re-launch the bot if it gets an exit code of 20
         System.exit(20);
     }
 }
