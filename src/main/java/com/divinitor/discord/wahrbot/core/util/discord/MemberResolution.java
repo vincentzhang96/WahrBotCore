@@ -8,12 +8,28 @@ import net.dv8tion.jda.core.entities.User;
 import java.util.List;
 import java.util.regex.Pattern;
 
+/**
+ * A helper class for resolving member names
+ */
 public class MemberResolution {
 
+    /**
+     * A Regex pattern that matches usernames-discriminator (Name#1234) format
+     */
     private static final Pattern USERNAME_DISCRIM = Pattern.compile(".+?#[0-9][0-9][0-9][0-9]$");
 
+    /**
+     * Private constructor
+     */
     private MemberResolution() {}
 
+    /**
+     * Try to find a member, given a query. The query can be an exact name, a nickname, a prefix, a full
+     * username#discrim, a short ID, or a long ID.
+     * @param query The query
+     * @param context The command context to find the member in
+     * @return The best matched member, or null if no match could be made
+     */
     public static Member findMember(String query, CommandContext context) {
         String queryLower = query.toLowerCase();
         Guild guild = context.getServer();

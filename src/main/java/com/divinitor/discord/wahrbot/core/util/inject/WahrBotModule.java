@@ -39,7 +39,9 @@ public class WahrBotModule extends AbstractModule {
         //  Jedis provider (deferred loading)
         bind(JedisProvider.class).toInstance(new JedisProvider(this.bot.getJedisPool()::getResource));
         //  A bit of a misrepresentation, since the provider is a singleton, but the Connections are not.
-        bind(SQLConnectionProvider.class).toInstance(this.bot.getDataSource()::getConnection);
+        if (this.bot.getDataSource() != null) {
+            bind(SQLConnectionProvider.class).toInstance(this.bot.getDataSource()::getConnection);
+        }
 
         //  Module manager
         bind(ModuleManager.class).toProvider(this.bot::getModuleManager);

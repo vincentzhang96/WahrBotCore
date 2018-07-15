@@ -2,17 +2,42 @@ package com.divinitor.discord.wahrbot.core.util.discord;
 
 import net.dv8tion.jda.core.entities.ISnowflake;
 
+/**
+ * Discord ID ("snowflake") utilities
+ */
 public class SnowflakeUtils {
 
+    /**
+     * The Discord epoch, which is the time (in milliseconds) that Discord is offset from the Unix epoch
+     */
     public static final long DISCORD_EPOCH_MS = 1420070400000L;
 
+    /**
+     * The Base62 codex
+     */
     public static final String CODEX = "0123456789ABCDEFGH_JKLMN=PQRSTUVWXYZabcdefghijk-mnopqrstuvwxyz";
+
+    /**
+     * The base (62)
+     */
     public static final int BASE = CODEX.length();
+
+    /**
+     * Prefix to use to identify as a Discord Short ID
+     */
     public static final String PREFIX = "$";
 
+    /**
+     * Private constructor
+     */
     private SnowflakeUtils() {
     }
 
+    /**
+     * Convert a snowflake into a timestamp
+     * @param snowflake The snowflake
+     * @return The timestamp, in milliseconds since the Unix epoch
+     */
     public static long getTimestampMs(long snowflake) {
         //  Shift out low bits
         snowflake = snowflake >>> 22;
@@ -22,14 +47,38 @@ public class SnowflakeUtils {
         return snowflake;
     }
 
+    /**
+     * Convert a snowflake into a timestamp
+     * @param snowflake The snowflake
+     * @return The timestamp, in milliseconds since the Unix epoch
+     */
     public static long getTimestampMs(String snowflake) {
         return getTimestampMs(Long.parseUnsignedLong(snowflake));
     }
 
+    /**
+     * Convert a snowflake into a timestamp
+     * @param snowflake The snowflake
+     * @return The timestamp, in milliseconds since the Unix epoch
+     */
+    public static long getTimestampMs(ISnowflake snowflake) {
+        return getTimestampMs(snowflake.getIdLong());
+    }
+
+    /**
+     * Encodes a snowflake into base62
+     * @param snowflake The snowflake to encode
+     * @return The encoded snowflake
+     */
     public static String encode(ISnowflake snowflake) {
         return encode(snowflake.getIdLong());
     }
 
+    /**
+     * Encodes a snowflake into base62
+     * @param snowflake The snowflake to encode
+     * @return The encoded snowflake
+     */
     public static String encode(long snowflake) {
         long accum = snowflake;
         StringBuilder builder = new StringBuilder();
@@ -61,10 +110,20 @@ public class SnowflakeUtils {
         return ret;
     }
 
+    /**
+     * Encodes a snowflake into base62
+     * @param snowflake The snowflake to encode
+     * @return The encoded snowflake
+     */
     public static String encode(String snowflake) {
         return encode(Long.parseUnsignedLong(snowflake));
     }
 
+    /**
+     * Decodes a snowflake from base62
+     * @param encodedSnowflake The snowflake to decode
+     * @return The decoded snowflake
+     */
     public static long decode(String encodedSnowflake) {
         if (!encodedSnowflake.startsWith("$")) {
             throw new IllegalArgumentException("Not a valid encoded snowflake: " + encodedSnowflake);
@@ -73,6 +132,11 @@ public class SnowflakeUtils {
         return parse(encodedSnowflake);
     }
 
+    /**
+     * Decodes a snowflake from base62
+     * @param encodedSnowflake The snowflake to decode
+     * @return The decoded snowflake
+     */
     public static String decodeToString(String encodedSnowflake) {
         return Long.toUnsignedString(decode(encodedSnowflake));
     }
