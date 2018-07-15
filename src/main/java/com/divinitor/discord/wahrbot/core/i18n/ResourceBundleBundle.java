@@ -1,9 +1,15 @@
 package com.divinitor.discord.wahrbot.core.i18n;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.invoke.MethodHandles;
 import java.lang.ref.WeakReference;
 import java.util.*;
 
 public class ResourceBundleBundle implements LocalizerBundle {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private String bundleLocation;
     private WeakReference<ClassLoader> classloader;
@@ -19,11 +25,19 @@ public class ResourceBundleBundle implements LocalizerBundle {
 
     @Override
     public String get(String key, Locale locale) {
-        ResourceBundle bundle = getBundle(locale);
 
+        ResourceBundle bundle;
+        try {
+            bundle = getBundle(locale);
+        } catch (MissingResourceException mre) {
+            LOGGER.warn("Unable to load bundle at {}", this.bundleLocation);
+            return null;
+        }
         try {
             return bundle.getString(key);
         } catch (MissingResourceException mre) {
+            //  Missing key is normal
+//            LOGGER.warn("Missing key {} in bundle {}", key, this.bundleLocation);
             return null;
         }
     }
@@ -39,6 +53,11 @@ public class ResourceBundleBundle implements LocalizerBundle {
 
     @Override
     public boolean contains(String key, Locale locale) {
-        return getBundle(locale).containsKey(key);
+        try {
+            return getBundle(locale).containsKey(key);
+        } catch (MissingResourceException mre) {
+            LOGGER.warn("Unable to load bundle at {}", this.bundleLocation);
+            return false;
+        }
     }
 }
