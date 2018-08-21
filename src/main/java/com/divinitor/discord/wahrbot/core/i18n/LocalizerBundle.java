@@ -1,6 +1,7 @@
 package com.divinitor.discord.wahrbot.core.i18n;
 
 import java.util.Locale;
+import java.util.stream.Stream;
 
 public interface LocalizerBundle {
 
@@ -8,4 +9,7 @@ public interface LocalizerBundle {
 
     boolean contains(String key, Locale locale);
 
+    default Stream<String> keys(Locale locale) {
+        return Stream.empty();
+    }
 }

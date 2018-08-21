@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 import java.lang.invoke.MethodHandles;
 import java.lang.ref.WeakReference;
 import java.util.*;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public class ResourceBundleBundle implements LocalizerBundle {
 
@@ -59,5 +61,18 @@ public class ResourceBundleBundle implements LocalizerBundle {
             LOGGER.warn("Unable to load bundle at {}", this.bundleLocation);
             return false;
         }
+    }
+
+    @Override
+    public Stream<String> keys(Locale locale) {
+        ResourceBundle bundle;
+        try {
+            bundle = getBundle(locale);
+        } catch (MissingResourceException mre) {
+            LOGGER.warn("Unable to load bundle at {}", this.bundleLocation);
+            return Stream.empty();
+        }
+
+        return bundle.keySet().stream();
     }
 }
