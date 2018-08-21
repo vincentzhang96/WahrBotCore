@@ -17,6 +17,7 @@ import redis.clients.jedis.JedisPool;
 
 import javax.sql.DataSource;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
@@ -162,4 +163,10 @@ public interface WahrBot {
      * Restart the bot
      */
     void restart();
+
+    /**
+     * The instant the bot was started
+     * @return The instant the bot was started
+     */
+    Instant getStartTime();
 }

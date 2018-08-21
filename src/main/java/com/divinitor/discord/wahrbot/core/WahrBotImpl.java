@@ -53,6 +53,7 @@ import java.lang.invoke.MethodHandles;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -208,6 +209,12 @@ public class WahrBotImpl implements WahrBot {
     private MemoryTransientToggleRegistry backupRegistry;
 
     /**
+     * The time that the bot started
+     */
+    @Getter
+    private Instant startTime;
+
+    /**
      * Constructor
      */
     public WahrBotImpl() {
@@ -275,6 +282,7 @@ public class WahrBotImpl implements WahrBot {
      */
     private void init() {
         LOGGER.info("Starting {}...", this.getApplicationName());
+        this.startTime = Instant.now();
 
         //  Use no-op toggle
         this.toggleRegistry = new WeakToggleRegistryProxy(null);
