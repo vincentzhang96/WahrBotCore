@@ -153,12 +153,12 @@ public class CommandDispatcherImpl implements CommandDispatcher {
         }
 
         UserStore us = this.bot.getUserStorage().forUser(author);
-        return us.getBoolean("blacklist");
+        return us.getBoolean("blacklist", false);
     }
 
     public String getPrefixForServer(Guild guild) {
         ServerStore ss = this.bot.getServerStorage().forServer(guild);
-        String prefix = ss.getString("prefix");
+        String prefix = ss.getString("prefix", null);
         if (prefix != null) {
             return prefix;
         }

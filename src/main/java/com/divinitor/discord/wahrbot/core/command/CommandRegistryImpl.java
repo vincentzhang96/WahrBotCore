@@ -84,7 +84,7 @@ public class CommandRegistryImpl implements CommandRegistry {
             }
 
             Command cmd = command.getCommand();
-            if (!ctx.getUserStorage().getBoolean("sudo")) {
+            if (!ctx.getUserStorage().getBoolean("sudo", false)) {
                 if (!cmd.getBotPermissionConstraints().check(context)) {
                     return CommandResult.noBotPerm();
                 }
@@ -180,7 +180,7 @@ public class CommandRegistryImpl implements CommandRegistry {
         return wrapper.getCommand()
             .getUserPermissionConstraints()
             .and(this::checkExternalPermissions)
-            .or(ctx -> ctx.getUserStorage().getBoolean("sudo"))
+            .or(ctx -> ctx.getUserStorage().getBoolean("sudo", false))
             .check(context);
     }
 
