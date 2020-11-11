@@ -12,7 +12,7 @@ import com.divinitor.discord.wahrbot.core.store.UserStorage;
 import com.divinitor.discord.wahrbot.core.toggle.ToggleRegistry;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.inject.Injector;
-import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.api.JDA;
 import redis.clients.jedis.JedisPool;
 
 import javax.sql.DataSource;

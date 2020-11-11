@@ -1,6 +1,6 @@
 package com.divinitor.discord.wahrbot.core.util.discord;
 
-import net.dv8tion.jda.core.entities.ISnowflake;
+import net.dv8tion.jda.api.entities.ISnowflake;
 
 /**
  * Discord ID ("snowflake") utilities

@@ -1,9 +1,9 @@
 package com.divinitor.discord.wahrbot.core.util.discord;
 
 import com.divinitor.discord.wahrbot.core.command.CommandContext;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.User;
 
 import java.util.List;
 import java.util.regex.Pattern;

@@ -8,7 +8,7 @@ import com.divinitor.discord.wahrbot.core.util.redis.RedisList;
 import com.divinitor.discord.wahrbot.core.util.redis.RedisMap;
 import com.divinitor.discord.wahrbot.core.util.redis.RedisSet;
 import com.google.inject.Inject;
-import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.api.entities.User;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.ScanParams;
 import redis.clients.jedis.ScanResult;

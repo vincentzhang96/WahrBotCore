@@ -1,8 +1,9 @@
 package com.divinitor.discord.wahrbot.core;
 
 import com.google.inject.Inject;
-import net.dv8tion.jda.core.events.Event;
-import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Core event dispatcher for the bot. This listens for all events from JDA and then dispatches them accordingly
@@ -30,7 +31,7 @@ public class BotEventDispatcher extends ListenerAdapter {
      * @param event The Discord event
      */
     @Override
-    public void onGenericEvent(Event event) {
+    public void onGenericEvent(@NotNull GenericEvent event) {
         super.onGenericEvent(event);
 
         //  Dispatch

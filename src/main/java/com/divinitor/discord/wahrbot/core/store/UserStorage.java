@@ -1,6 +1,6 @@
 package com.divinitor.discord.wahrbot.core.store;
 
-import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.api.entities.User;
 
 /**
  * Per-user global storage.

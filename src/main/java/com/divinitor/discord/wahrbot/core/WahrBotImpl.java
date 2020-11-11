@@ -36,10 +36,9 @@ import com.google.inject.Injector;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.Getter;
-import net.dv8tion.jda.core.AccountType;
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.JDABuilder;
-import net.dv8tion.jda.core.hooks.InterfacedEventManager;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.hooks.InterfacedEventManager;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -381,20 +380,14 @@ public class WahrBotImpl implements WahrBot {
         //  Connect to Discord and begin general execution
         LOGGER.info("Connecting to Discord...");
 
-        while (true) {
-            try {
-                this.apiClient = new JDABuilder(AccountType.BOT)
-                    .setToken(this.getConfig().getDiscord().getToken())
+        try {
+            this.apiClient = JDABuilder.createDefault(this.getConfig().getDiscord().getToken())
                     .setAutoReconnect(true)
                     .setEventManager(new InterfacedEventManager())
-                    .addEventListener(this.getEventListener())
-                    .buildBlocking();
-                break;
-            } catch (LoginException e) {
-                throw new RuntimeException("Invalid token", e);
-            } catch (InterruptedException ignored) {
-                //  Ignore
-            }
+                    .addEventListeners(this.getEventListener())
+                    .build();
+        } catch (LoginException e) {
+            throw new RuntimeException("Invalid token", e);
         }
 
         LOGGER.info("Connected to Discord as {}#{} ({})",

@@ -9,7 +9,7 @@ import com.divinitor.discord.wahrbot.core.module.ModuleManager;
 import com.divinitor.discord.wahrbot.core.service.ServiceBus;
 import com.divinitor.discord.wahrbot.core.util.SQLConnectionProvider;
 import com.google.inject.AbstractModule;
-import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.api.JDA;
 import redis.clients.jedis.Jedis;
 
 /**
