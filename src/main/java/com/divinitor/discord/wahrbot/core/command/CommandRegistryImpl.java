@@ -177,10 +177,12 @@ public class CommandRegistryImpl implements CommandRegistry {
     }
 
     private boolean hasPermissionFor(CommandWrapper wrapper, CommandContext context) {
-        return wrapper.getCommand()
+        Command command = wrapper.getCommand();
+        return command
             .getUserPermissionConstraints()
             .and(this::checkExternalPermissions)
             .or(ctx -> ctx.getUserStorage().getBoolean("sudo", false))
+            .and(command.getOtherConstraints())
             .check(context);
     }
 
