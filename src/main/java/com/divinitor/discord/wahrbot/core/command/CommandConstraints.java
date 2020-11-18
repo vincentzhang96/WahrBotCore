@@ -39,7 +39,13 @@ public class CommandConstraints {
      * @return A PermissionConstraint checking that the user is the owner of the server
      */
     public static CommandConstraint<CommandContext> isOwner() {
-        return context -> !context.isPrivate() && context.getServer().getOwner().equals(context.getMember());
+        return context -> {
+            Member owner = context.getServer().getOwner();
+            if (owner == null) {
+                owner = context.getServer().retrieveOwner().complete();
+            }
+            return !context.isPrivate() && owner.equals(context.getMember());
+        };
     }
 
     /**
@@ -83,6 +89,10 @@ public class CommandConstraints {
         }
 
         Member member = server.getMember(user);
+        if (member == null) {
+            member = server.retrieveMember(user).complete();
+        }
+
         return PermissionUtil.checkPermission(context.getInvocationChannel(), member, perms);
     }
 
