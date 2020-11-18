@@ -102,6 +102,10 @@ public class CommandConstraints {
         }
 
         Member member = server.getMember(user);
+        if (member == null) {
+            member = server.retrieveMember(user, true).complete();
+        }
+
         for (Permission p : perms) {
             if (PermissionUtil.checkPermission(context.getInvocationChannel(), member, p)) {
                 return true;
