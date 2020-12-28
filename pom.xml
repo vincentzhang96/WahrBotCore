@@ -147,7 +147,7 @@
             <!-- Redis -->
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
-            <version>2.9.0</version>
+            <version>3.4.1</version>
         </dependency>
         <dependency>
             <!-- PostgreSQL -->
