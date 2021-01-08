@@ -39,6 +39,7 @@ import lombok.Getter;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.hooks.InterfacedEventManager;
+import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -382,6 +383,7 @@ public class WahrBotImpl implements WahrBot {
 
         try {
             this.apiClient = JDABuilder.createDefault(this.getConfig().getDiscord().getToken())
+                    .enableIntents(GatewayIntent.GUILD_MEMBERS)
                     .setAutoReconnect(true)
                     .setEventManager(new InterfacedEventManager())
                     .addEventListeners(this.getEventListener())
