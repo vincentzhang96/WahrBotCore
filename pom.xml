@@ -159,7 +159,7 @@
             <!-- Hikari JDBC Connection Pooling -->
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
-            <version>2.6.1</version>
+            <version>4.0.0</version>
             <scope>compile</scope>
         </dependency>
 
