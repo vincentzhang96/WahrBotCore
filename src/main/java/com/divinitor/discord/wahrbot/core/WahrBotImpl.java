@@ -383,7 +383,11 @@ public class WahrBotImpl implements WahrBot {
 
         try {
             this.apiClient = JDABuilder.createDefault(this.getConfig().getDiscord().getToken())
-                    .enableIntents(GatewayIntent.GUILD_MEMBERS)
+                    .enableIntents(
+                            GatewayIntent.GUILD_MEMBERS,
+                            GatewayIntent.GUILD_MESSAGES,
+                            GatewayIntent.GUILD_PRESENCES
+                    )
                     .setAutoReconnect(true)
                     .setEventManager(new InterfacedEventManager())
                     .addEventListeners(this.getEventListener())
