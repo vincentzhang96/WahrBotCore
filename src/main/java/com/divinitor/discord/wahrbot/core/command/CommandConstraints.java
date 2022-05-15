@@ -1,9 +1,7 @@
 package com.divinitor.discord.wahrbot.core.command;
 
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.internal.utils.PermissionUtil;
 
 public class CommandConstraints {
@@ -93,7 +91,12 @@ public class CommandConstraints {
             member = server.retrieveMember(user).complete();
         }
 
-        return PermissionUtil.checkPermission(context.getInvocationChannel(), member, perms);
+        if (context.isPrivate()) {
+            return true;
+        }
+
+        TextChannel invocationChannel = (TextChannel)context.getInvocationChannel();
+        return PermissionUtil.checkPermission(invocationChannel, member, perms);
     }
 
     static boolean hasAnyPerms(CommandContext context, Permission... perms) {
@@ -116,8 +119,14 @@ public class CommandConstraints {
             member = server.retrieveMember(user, true).complete();
         }
 
+        if (context.isPrivate()) {
+            return true;
+        }
+
+        TextChannel invocationChannel = (TextChannel)context.getInvocationChannel();
+
         for (Permission p : perms) {
-            if (PermissionUtil.checkPermission(context.getInvocationChannel(), member, p)) {
+            if (PermissionUtil.checkPermission(invocationChannel, member, p)) {
                 return true;
             }
         }

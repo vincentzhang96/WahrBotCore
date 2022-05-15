@@ -10,8 +10,7 @@ import lombok.Getter;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
-import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,8 +48,7 @@ public class CommandDispatcherImpl implements CommandDispatcher {
     }
 
     @Override
-    @Subscribe
-    public void handlePrivateMessage(PrivateMessageReceivedEvent event) {
+    public void handlePrivateMessage(MessageReceivedEvent event) {
         if (shouldIgnore(event.getAuthor())) {
             return;
         }
@@ -64,8 +62,7 @@ public class CommandDispatcherImpl implements CommandDispatcher {
     }
 
     @Override
-    @Subscribe
-    public void handleServerMessage(GuildMessageReceivedEvent event) {
+    public void handleServerMessage(MessageReceivedEvent event) {
         if (shouldIgnore(event.getAuthor())) {
             return;
         }

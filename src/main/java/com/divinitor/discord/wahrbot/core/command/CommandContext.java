@@ -36,14 +36,14 @@ public interface CommandContext {
      * Gets the JDA channel object that the command was invoked in.
      * @return The JDA channel that invoked this command
      */
-    TextChannel getInvocationChannel();
+    MessageChannel getInvocationChannel();
 
     /**
      * Gets the JDA channel object that command feedback responses should be sent to. In most cases, this will be the
      * same as the invocation channel.
      * @return The JDA channel that should be used for command feedback
      */
-    TextChannel getFeedbackChannel();
+    MessageChannel getFeedbackChannel();
 
     /**
      * Gets the JDA user that invoked this command.

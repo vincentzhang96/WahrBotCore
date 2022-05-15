@@ -10,7 +10,7 @@ import lombok.Setter;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.Event;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -24,7 +24,7 @@ public class StandardGuildCommandContext implements CommandContext {
     public static final String USER_LOCALE_KEY = "opt.locale";
 
     private final WahrBot bot;
-    private final GuildMessageReceivedEvent event;
+    private final MessageReceivedEvent event;
     private final CommandLine commandLine;
     private final CommandRegistry registry;
     private final UUID uuid;
@@ -33,7 +33,7 @@ public class StandardGuildCommandContext implements CommandContext {
     private String nameKey;
 
     public StandardGuildCommandContext(WahrBot bot,
-                                       GuildMessageReceivedEvent event,
+                                       MessageReceivedEvent event,
                                        CommandLine commandLine,
                                        CommandRegistry registry) {
         this.bot = bot;
@@ -45,7 +45,7 @@ public class StandardGuildCommandContext implements CommandContext {
 
     public StandardGuildCommandContext(CommandContext context, CommandRegistry newRegistry) {
         this(context.getBot(),
-            (GuildMessageReceivedEvent) context.getEvent(),
+            (MessageReceivedEvent) context.getEvent(),
             context.getCommandLine(),
             newRegistry);
     }
@@ -65,12 +65,12 @@ public class StandardGuildCommandContext implements CommandContext {
     }
 
     @Override
-    public TextChannel getInvocationChannel() {
+    public MessageChannel getInvocationChannel() {
         return this.event.getChannel();
     }
 
     @Override
-    public TextChannel getFeedbackChannel() {
+    public MessageChannel getFeedbackChannel() {
         return this.event.getChannel();
     }
 

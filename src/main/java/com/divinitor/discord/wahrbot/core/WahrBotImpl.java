@@ -1,6 +1,5 @@
 package com.divinitor.discord.wahrbot.core;
 
-import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Reporter;
 import com.divinitor.discord.wahrbot.core.command.CommandDispatcher;
@@ -152,7 +151,7 @@ public class WahrBotImpl implements WahrBot {
     /**
      * The metric reporter (currently unused)
      */
-    private final Reporter reporter;
+//    private final Reporter reporter;
 
     /**
      * The module manager
@@ -244,12 +243,13 @@ public class WahrBotImpl implements WahrBot {
         this.metrics.registerAll(this.eventBusMetricSet);
 
         //  TEMPORARY: Report our metrics to the console every minute
-        ConsoleReporter re = ConsoleReporter.forRegistry(this.metrics)
-            .convertDurationsTo(TimeUnit.SECONDS)
-            .convertRatesTo(TimeUnit.SECONDS)
-            .build();
-        re.start(1, TimeUnit.MINUTES);
-        this.reporter = re;
+//        ConsoleReporter re = ConsoleReporter.forRegistry(this.metrics)
+//            .convertDurationsTo(TimeUnit.SECONDS)
+//            .convertRatesTo(TimeUnit.SECONDS)
+//            .build();
+//
+//        re.start(1, TimeUnit.MINUTES);
+//        this.reporter = re;
 
         //  Service bus
         this.serviceBus = new ServiceBusImpl();

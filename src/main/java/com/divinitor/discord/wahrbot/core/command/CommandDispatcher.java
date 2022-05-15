@@ -1,16 +1,23 @@
 package com.divinitor.discord.wahrbot.core.command;
 
 import com.google.common.eventbus.Subscribe;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
-import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent;
+import net.dv8tion.jda.api.entities.ChannelType;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 public interface CommandDispatcher {
 
     @Subscribe
-    void handlePrivateMessage(PrivateMessageReceivedEvent event);
+    default void handleMessage(MessageReceivedEvent event) {
+        if (event.isFromType(ChannelType.PRIVATE)) {
+            this.handlePrivateMessage(event);
+        } else if (event.isFromGuild()) {
+            this.handleServerMessage(event);
+        }
+    }
 
-    @Subscribe
-    void handleServerMessage(GuildMessageReceivedEvent event);
+    void handlePrivateMessage(MessageReceivedEvent event);
+
+    void handleServerMessage(MessageReceivedEvent event);
 
     CommandRegistry getRootRegistry();
 }
